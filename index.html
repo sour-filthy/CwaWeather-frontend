@@ -7,188 +7,189 @@
     <style>
         :root {
             --ground-color: #8da25d;
-            --hole-color: #3e2723;
-            --mole-color: #a1887f;
-            --mole-bonked: #e57373;
+            --hole-color: #5d4037; /* 深咖啡色洞穴 */
+            --mole-color: #a1887f; /* 一般地鼠色 */
+            --mole-happy: #ffd54f; /* 快樂被點到的金黃色 */
         }
 
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #aaddff;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            
+            /* --- 1. 背景點點圖案 --- */
+            background-color: #aaddff; /* 底色 */
+            background-image: radial-gradient(#ffffff 20%, transparent 20%), radial-gradient(#ffffff 20%, transparent 20%);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
         }
 
         h1 {
-            color: #fff;
-            text-shadow: 2px 2px 0 #333;
+            color: #333; /* 改深色字比較清楚 */
+            text-shadow: 2px 2px 0 #fff;
             margin: 20px 0;
             z-index: 10;
             text-align: center;
             font-size: 1.8rem;
         }
 
-        /* --- MAP CONTAINER --- */
+        /* --- 地圖容器 --- */
         .map-container {
             position: relative;
-            width: 95%;              /* Takes almost full width on mobile */
-            max-width: 600px;        /* Stops getting too big on desktop */
-            aspect-ratio: 0.65;      /* Keeps Taiwan shape */
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/03/Taiwan_blank_map.svg');
+            width: 95%;
+            max-width: 600px;
+            aspect-ratio: 0.65;
+            /* --- 2. 粉紅色台灣地圖輪廓 --- */
+            /* 使用一張有縣市界線的地圖 SVG */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f1/Taiwan_Republic_of_China_location_map.svg');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
+            /* 使用濾鏡把地圖變成粉紅色調 */
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3)) hue-rotate(300deg) saturate(3) brightness(1.2);
             margin-bottom: 50px;
         }
 
-        /* --- HOLE CONTAINER (Desktop Default) --- */
+        /* --- 每個城市的位置 --- */
         .hole-container {
             position: absolute;
             width: 60px;
             height: 60px;
             transform: translate(-50%, -50%);
             cursor: pointer;
-            /* Debugging tip: toggle background below to see click zones */
-            /* background: rgba(255,0,0,0.1); */ 
         }
 
-        /* High Z-Index when active */
+        /* 被點到時層級最高，不會被遮住 */
         .hole-container.active { z-index: 1000; }
 
-        /* The Dirt Hole */
+        /* --- 土洞 --- */
         .hole {
             width: 100%;
-            height: 20px; /* Flattened oval */
+            height: 24px;
             background: var(--hole-color);
             border-radius: 50%;
             position: absolute;
-            bottom: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
+            bottom: 15px; /* 往上移一點 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5) inset;
+            z-index: 1; /* 在最底層 */
         }
 
-        /* City Label */
+        /* --- 城市名稱標籤 --- */
         .city-label {
             position: absolute;
-            bottom: -15px;
-            width: 100px;
+            /* 移到洞的上方 */
+            top: 10px;
+            width: 80px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
-            color: #333;
+            color: #fff;
             font-weight: bold;
-            font-size: 12px;
-            text-shadow: 1px 1px 0px white;
+            font-size: 13px;
+            text-shadow: 1px 1px 2px #333, -1px -1px 2px #333; /* 加強邊框讓字更清楚 */
             pointer-events: none;
-            white-space: nowrap;
+            z-index: 3; /* 在洞上面 */
         }
 
-        /* --- THE MOLE --- */
+        /* --- 地鼠 --- */
         .mole {
-            width: 40px;
-            height: 45px;
+            width: 44px;
+            height: 50px;
             background: var(--mole-color);
-            border-radius: 20px 20px 10px 10px;
+            border-radius: 22px 22px 10px 10px;
             position: absolute;
-            bottom: 15px; /* Sits inside hole */
+            /* --- 3. 出現在洞的上面 --- */
+            bottom: 25px; /* 起始位置在洞口 */
             left: 50%;
-            transform: translateX(-50%) translateY(100%); /* Start hidden */
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 1;
+            /* 初始狀態：縮小並藏在後面 */
+            transform: translateX(-50%) scale(0.1);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* 彈跳效果 */
+            z-index: 2; /* 在洞和標籤的中間 */
             display: flex;
             justify-content: center;
         }
 
-        /* Mole Face */
-        .mole::before { /* Snout */
-            content: ''; width: 12px; height: 8px; background: #ffccbc;
-            border-radius: 50%; position: absolute; top: 18px;
+        /* 地鼠的臉 */
+        .mole::before { /* 鼻子 */
+            content: ''; width: 14px; height: 9px; background: #ffccbc;
+            border-radius: 50%; position: absolute; top: 22px;
         }
-        .mole::after { /* Eyes */
-            content: ''; width: 4px; height: 4px; background: #333;
-            border-radius: 50%; position: absolute; top: 12px; left: 12px;
-            box-shadow: 12px 0 0 #333;
+        .mole::after { /* 眼睛 (預設) */
+            content: ''; width: 5px; height: 5px; background: #333;
+            border-radius: 50%; position: absolute; top: 15px; left: 12px;
+            box-shadow: 14px 0 0 #333;
         }
 
-        /* Bonked State */
-        .mole.bonked { background: var(--mole-bonked); }
+        /* --- 4. 快樂被點到的狀態 --- */
+        .mole.bonked { 
+            background: var(--mole-happy); /* 變金黃色 */
+        }
         .mole.bonked::after {
-            content: 'x x';
+            /* 改成快樂的表情 ^ ^ */
+            content: '^ ^';
             background: transparent; box-shadow: none;
-            font-size: 10px; font-weight: bold; top: 10px; left: 10px; color: #333;
+            font-size: 12px; font-weight: bold; top: 12px; left: 50%;
+            transform: translateX(-50%); /* 居中 */
+            color: #5d4037; letter-spacing: 4px;
         }
 
-        /* Info Board */
+        /* 天氣資訊牌 */
         .mole-info {
             background: white;
-            padding: 4px;
-            border-radius: 4px;
+            padding: 5px 8px;
+            border-radius: 8px;
             text-align: center;
-            font-size: 11px;
-            border: 2px solid #333;
+            font-size: 12px;
+            border: 3px solid var(--mole-happy); /* 邊框跟著快樂色 */
             position: absolute;
-            top: -60px;
-            width: 80px;
+            top: -65px;
+            width: 90px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) scale(0.8);
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.2s;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            transition: all 0.3s 0.1s; /* 稍微延遲出現 */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
+        .mole-info strong { color: #d84315; font-size: 1.1em; display: block; margin-bottom: 2px;}
 
-        /* Active Animation */
+        /* --- 被點到時的動畫 --- */
         .hole-container.active .mole { 
-            transform: translateX(-50%) translateY(0); 
+            /* 彈出來並變回原尺寸 */
+            transform: translateX(-50%) scale(1); 
+            opacity: 1;
         }
         .hole-container.active .mole-info { 
             opacity: 1; 
+            transform: translateX(-50%) scale(1);
         }
 
-        /* --- 📱 MOBILE RESPONSIVE RULES 📱 --- */
+        /* --- 📱 手機版 RWD --- */
         @media (max-width: 600px) {
-            /* Shrink the container area so holes don't overlap */
-            .hole-container {
-                width: 30px;
-                height: 30px;
-            }
-
-            /* Shrink the Mole */
-            .mole {
-                width: 24px;
-                height: 30px;
-                bottom: 8px;
-                border-radius: 10px 10px 5px 5px;
-            }
-
-            /* Adjust Face */
-            .mole::before { width: 8px; height: 5px; top: 12px; } /* Snout */
-            .mole::after { width: 2px; height: 2px; top: 8px; left: 7px; box-shadow: 8px 0 0 #333; } /* Eyes */
-            .mole.bonked::after { font-size: 8px; top: 6px; left: 6px; }
-
-            /* Shrink Hole Dirt */
-            .hole { height: 10px; bottom: 2px; }
-
-            /* Hide text labels on mobile to clean up map (optional) */
-            /* Or make them very small */
+            .hole-container { width: 36px; height: 36px; }
+            .hole { height: 14px; bottom: 8px; }
+            
             .city-label {
-                font-size: 9px;
-                bottom: -12px;
-                text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
-                background: rgba(255,255,255,0.4); /* background helps readability */
-                padding: 0 2px;
-                border-radius: 4px;
+                font-size: 10px;
+                top: 4px;
+                text-shadow: 1px 1px 1px #333, -1px -1px 1px #333;
             }
 
-            /* Adjust Info Board Position */
+            .mole {
+                width: 28px; height: 34px; bottom: 14px;
+                border-radius: 14px 14px 6px 6px;
+            }
+            .mole::before { width: 8px; height: 6px; top: 14px; } /* 鼻子 */
+            .mole::after { width: 3px; height: 3px; top: 10px; left: 8px; box-shadow: 9px 0 0 #333; } /* 眼睛 */
+            .mole.bonked::after { font-size: 9px; top: 8px; letter-spacing: 2px; } /* 快樂眼 */
+
             .mole-info {
-                top: -55px;
-                width: 70px;
-                font-size: 10px;
-                z-index: 2000; /* Ensure it's on top of everything */
+                top: -55px; width: 75px; font-size: 10px; padding: 4px;
             }
         }
     </style>
