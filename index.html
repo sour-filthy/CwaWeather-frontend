@@ -7,9 +7,9 @@
     <style>
         :root {
             --ground-color: #8da25d;
-            --hole-color: #5d4037; /* 深咖啡色洞穴 */
-            --mole-color: #a1887f; /* 一般地鼠色 */
-            --mole-happy: #ffd54f; /* 快樂被點到的金黃色 */
+            --hole-color: #3e2723; /* 深深咖啡色 (洞) */
+            --mole-color: #8d6e63; /* 經典地鼠褐 (不像豬了) */
+            --mole-bonked: #e53935; /* 被打到的鮮紅色 */
         }
 
         body {
@@ -21,40 +21,49 @@
             align-items: center;
             overflow-x: hidden;
             
-            /* --- 1. 背景點點圖案 --- */
-            background-color: #aaddff; /* 底色 */
-            background-image: radial-gradient(#ffffff 20%, transparent 20%), radial-gradient(#ffffff 20%, transparent 20%);
-            background-size: 30px 30px;
-            background-position: 0 0, 15px 15px;
+            /* --- 1. 背景改回乾淨的單色 --- */
+            background-color: #87CEEB; /* 天空藍 */
         }
 
         h1 {
-            color: #333; /* 改深色字比較清楚 */
-            text-shadow: 2px 2px 0 #fff;
+            color: #fff;
+            text-shadow: 2px 2px 0 #333;
             margin: 20px 0;
             z-index: 10;
             text-align: center;
             font-size: 1.8rem;
         }
 
-        /* --- 地圖容器 --- */
+        /* --- 2. 點陣風格台灣地圖 --- */
         .map-container {
             position: relative;
             width: 95%;
             max-width: 600px;
             aspect-ratio: 0.65;
-            /* --- 2. 粉紅色台灣地圖輪廓 --- */
-            /* 使用一張有縣市界線的地圖 SVG */
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f1/Taiwan_Republic_of_China_location_map.svg');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            /* 使用濾鏡把地圖變成粉紅色調 */
-            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3)) hue-rotate(300deg) saturate(3) brightness(1.2);
             margin-bottom: 50px;
+
+            /* A. 這裡設定「點點」圖案 */
+            background-image: radial-gradient(#ffffff 30%, transparent 31%);
+            background-size: 8px 8px; /* 點點的大小與密度 */
+            
+            /* B. 使用台灣地圖作為「遮罩」 (把點點切成台灣的形狀) */
+            -webkit-mask-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f1/Taiwan_Republic_of_China_location_map.svg');
+            mask-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f1/Taiwan_Republic_of_China_location_map.svg');
+            
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            
+            -webkit-mask-position: center;
+            mask-position: center;
+
+            /* 增加一個淡淡的白色輪廓陰影，讓地圖更明顯 */
+            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8));
         }
 
-        /* --- 每個城市的位置 --- */
+        /* --- 洞的位置與互動 --- */
         .hole-container {
             position: absolute;
             width: 60px;
@@ -63,26 +72,25 @@
             cursor: pointer;
         }
 
-        /* 被點到時層級最高，不會被遮住 */
+        /* 被啟用時層級最高 */
         .hole-container.active { z-index: 1000; }
 
-        /* --- 土洞 --- */
+        /* --- 洞穴 (保持深色) --- */
         .hole {
             width: 100%;
             height: 24px;
             background: var(--hole-color);
             border-radius: 50%;
             position: absolute;
-            bottom: 15px; /* 往上移一點 */
+            bottom: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.5) inset;
-            z-index: 1; /* 在最底層 */
+            z-index: 1; 
         }
 
-        /* --- 城市名稱標籤 --- */
+        /* --- 城市標籤 --- */
         .city-label {
             position: absolute;
-            /* 移到洞的上方 */
-            top: 10px;
+            top: 10px; /* 在洞的上方 */
             width: 80px;
             left: 50%;
             transform: translateX(-50%);
@@ -90,77 +98,88 @@
             color: #fff;
             font-weight: bold;
             font-size: 13px;
-            text-shadow: 1px 1px 2px #333, -1px -1px 2px #333; /* 加強邊框讓字更清楚 */
+            text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000; /* 強烈黑邊 */
             pointer-events: none;
-            z-index: 3; /* 在洞上面 */
+            z-index: 3;
         }
 
-        /* --- 地鼠 --- */
+        /* --- 地鼠本體 --- */
         .mole {
             width: 44px;
             height: 50px;
-            background: var(--mole-color);
+            background: var(--mole-color); /* 褐色 */
             border-radius: 22px 22px 10px 10px;
             position: absolute;
-            /* --- 3. 出現在洞的上面 --- */
-            bottom: 25px; /* 起始位置在洞口 */
+            bottom: 25px;
             left: 50%;
-            /* 初始狀態：縮小並藏在後面 */
+            
+            /* 初始狀態：縮小並藏著 */
             transform: translateX(-50%) scale(0.1);
             opacity: 0;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* 彈跳效果 */
-            z-index: 2; /* 在洞和標籤的中間 */
+            
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2;
             display: flex;
             justify-content: center;
         }
 
-        /* 地鼠的臉 */
-        .mole::before { /* 鼻子 */
-            content: ''; width: 14px; height: 9px; background: #ffccbc;
+        /* 鼻子 (調深一點，避免像豬) */
+        .mole::before { 
+            content: ''; width: 14px; height: 10px; 
+            background: #d7ccc8; /* 灰白色鼻子 */
             border-radius: 50%; position: absolute; top: 22px;
         }
-        .mole::after { /* 眼睛 (預設) */
-            content: ''; width: 5px; height: 5px; background: #333;
+        
+        /* 眼睛 (正常狀態) */
+        .mole::after { 
+            content: ''; width: 5px; height: 5px; 
+            background: #333;
             border-radius: 50%; position: absolute; top: 15px; left: 12px;
             box-shadow: 14px 0 0 #333;
         }
 
-        /* --- 4. 快樂被點到的狀態 --- */
+        /* --- 3. 被打到的狀態 (Bonked) --- */
         .mole.bonked { 
-            background: var(--mole-happy); /* 變金黃色 */
+            background: var(--mole-bonked); /* 變紅色 */
         }
+        
         .mole.bonked::after {
-            /* 改成快樂的表情 ^ ^ */
-            content: '^ ^';
+            /* x x 眼睛 */
+            content: 'x x';
             background: transparent; box-shadow: none;
-            font-size: 12px; font-weight: bold; top: 12px; left: 50%;
-            transform: translateX(-50%); /* 居中 */
-            color: #5d4037; letter-spacing: 4px;
+            font-size: 14px; font-weight: bold; top: 12px; left: 50%;
+            transform: translateX(-50%);
+            color: #fff; letter-spacing: 2px;
         }
 
-        /* 天氣資訊牌 */
+        /* 被打到的動畫：歪頭倒下 */
+        .hole-container.active .mole.bonked {
+            transform: translateX(-50%) rotate(25deg) translateY(5px);
+            transition: transform 0.1s; /* 瞬間倒下 */
+        }
+
+        /* --- 天氣資訊牌 --- */
         .mole-info {
             background: white;
             padding: 5px 8px;
             border-radius: 8px;
             text-align: center;
             font-size: 12px;
-            border: 3px solid var(--mole-happy); /* 邊框跟著快樂色 */
+            border: 2px solid #333;
             position: absolute;
-            top: -65px;
+            top: -75px; /* 飛高一點避免擋住 */
             width: 90px;
             left: 50%;
             transform: translateX(-50%) scale(0.8);
             opacity: 0;
             pointer-events: none;
-            transition: all 0.3s 0.1s; /* 稍微延遲出現 */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .mole-info strong { color: #d84315; font-size: 1.1em; display: block; margin-bottom: 2px;}
 
-        /* --- 被點到時的動畫 --- */
+        /* 彈出動畫 */
         .hole-container.active .mole { 
-            /* 彈出來並變回原尺寸 */
             transform: translateX(-50%) scale(1); 
             opacity: 1;
         }
@@ -169,27 +188,26 @@
             transform: translateX(-50%) scale(1);
         }
 
-        /* --- 📱 手機版 RWD --- */
+        /* --- RWD 手機版調整 --- */
         @media (max-width: 600px) {
             .hole-container { width: 36px; height: 36px; }
             .hole { height: 14px; bottom: 8px; }
             
             .city-label {
-                font-size: 10px;
-                top: 4px;
-                text-shadow: 1px 1px 1px #333, -1px -1px 1px #333;
+                font-size: 10px; top: 4px;
             }
 
             .mole {
                 width: 28px; height: 34px; bottom: 14px;
                 border-radius: 14px 14px 6px 6px;
             }
-            .mole::before { width: 8px; height: 6px; top: 14px; } /* 鼻子 */
-            .mole::after { width: 3px; height: 3px; top: 10px; left: 8px; box-shadow: 9px 0 0 #333; } /* 眼睛 */
-            .mole.bonked::after { font-size: 9px; top: 8px; letter-spacing: 2px; } /* 快樂眼 */
+            .mole::before { width: 8px; height: 6px; top: 14px; }
+            .mole::after { width: 3px; height: 3px; top: 10px; left: 8px; box-shadow: 9px 0 0 #333; }
+            
+            .mole.bonked::after { font-size: 10px; top: 8px; letter-spacing: 1px; }
 
             .mole-info {
-                top: -55px; width: 75px; font-size: 10px; padding: 4px;
+                top: -60px; width: 75px; font-size: 10px; padding: 4px;
             }
         }
     </style>
