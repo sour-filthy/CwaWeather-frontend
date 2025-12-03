@@ -4,204 +4,212 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taiwan Weather Whack-a-Mole</title>
-<style>
-    :root {
-        --ground-color: #8da25d;
-        --hole-color: #3e2723; /* 深深咖啡色 (洞) */
-        --mole-color: #8d6e63; /* 經典地鼠褐 */
-        --mole-bonked: #e53935; /* 被打到的鮮紅色 */
-    }
-
-    body {
-        margin: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        overflow-x: hidden;
-        
-        /* --- 1. 背景：乾淨的天空藍 --- */
-        background-color: #87CEEB; 
-    }
-
-    h1 {
-        color: #fff;
-        text-shadow: 2px 2px 0 #333;
-        margin: 20px 0;
-        z-index: 10;
-        text-align: center;
-        font-size: 1.8rem;
-    }
-
-    /* --- 2. 地圖容器 (修復版) --- */
-    .map-container {
-        position: relative;
-        width: 95%;
-        max-width: 600px;
-        aspect-ratio: 0.65;
-        margin-bottom: 50px;
-
-        /* 改回使用標準背景圖，確保一定看得到 */
-        background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f1/Taiwan_Republic_of_China_location_map.svg');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        
-        /* 使用濾鏡把原本灰色的地圖變成「半透明白色」 */
-        /* 這樣在藍色背景上會很像雲朵或浮水印，非常清楚 */
-        filter: brightness(0) invert(1) opacity(0.6) drop-shadow(0 0 5px rgba(255,255,255,0.5));
-    }
-
-    /* --- 洞的位置與互動 --- */
-    .hole-container {
-        position: absolute;
-        width: 60px;
-        height: 60px;
-        transform: translate(-50%, -50%);
-        cursor: pointer;
-    }
-
-    .hole-container.active { z-index: 1000; }
-
-    /* --- 洞穴 --- */
-    .hole {
-        width: 100%;
-        height: 24px;
-        background: var(--hole-color);
-        border-radius: 50%;
-        position: absolute;
-        bottom: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.5) inset;
-        z-index: 1; 
-    }
-
-    /* --- 城市標籤 --- */
-    .city-label {
-        position: absolute;
-        top: 10px; /* 在洞的上方 */
-        width: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        color: #fff;
-        font-weight: bold;
-        font-size: 13px;
-        text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000; /* 強烈黑邊 */
-        pointer-events: none;
-        z-index: 3;
-    }
-
-    /* --- 地鼠本體 --- */
-    .mole {
-        width: 44px;
-        height: 50px;
-        background: var(--mole-color);
-        border-radius: 22px 22px 10px 10px;
-        position: absolute;
-        bottom: 25px;
-        left: 50%;
-        
-        transform: translateX(-50%) scale(0.1); /* 初始隱藏 */
-        opacity: 0;
-        
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        z-index: 2;
-        display: flex;
-        justify-content: center;
-    }
-
-    /* 鼻子 (灰白色) */
-    .mole::before { 
-        content: ''; width: 14px; height: 10px; 
-        background: #d7ccc8;
-        border-radius: 50%; position: absolute; top: 22px;
-    }
-    
-    /* 眼睛 (正常) */
-    .mole::after { 
-        content: ''; width: 5px; height: 5px; 
-        background: #333;
-        border-radius: 50%; position: absolute; top: 15px; left: 12px;
-        box-shadow: 14px 0 0 #333;
-    }
-
-    /* --- 3. 被打到的狀態 (Bonked) --- */
-    .mole.bonked { 
-        background: var(--mole-bonked); /* 變紅 */
-    }
-    
-    .mole.bonked::after {
-        /* x x 眼睛 */
-        content: 'x x';
-        background: transparent; box-shadow: none;
-        font-size: 14px; font-weight: bold; top: 12px; left: 50%;
-        transform: translateX(-50%);
-        color: #fff; letter-spacing: 2px;
-    }
-
-    /* 被打到的動畫：歪頭倒下 */
-    .hole-container.active .mole.bonked {
-        transform: translateX(-50%) rotate(25deg) translateY(5px);
-        transition: transform 0.1s;
-    }
-
-    /* --- 天氣資訊牌 --- */
-    .mole-info {
-        background: white;
-        padding: 5px 8px;
-        border-radius: 8px;
-        text-align: center;
-        font-size: 12px;
-        border: 2px solid #333;
-        position: absolute;
-        top: -75px;
-        width: 90px;
-        left: 50%;
-        transform: translateX(-50%) scale(0.8);
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.3s;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-    .mole-info strong { color: #d84315; font-size: 1.1em; display: block; margin-bottom: 2px;}
-
-    /* 彈出動畫 */
-    .hole-container.active .mole { 
-        transform: translateX(-50%) scale(1); 
-        opacity: 1;
-    }
-    .hole-container.active .mole-info { 
-        opacity: 1; 
-        transform: translateX(-50%) scale(1);
-    }
-
-    /* --- RWD 手機版調整 --- */
-    @media (max-width: 600px) {
-        .hole-container { width: 36px; height: 36px; }
-        .hole { height: 14px; bottom: 8px; }
-        .city-label { font-size: 10px; top: 4px; }
-
-        .mole {
-            width: 28px; height: 34px; bottom: 14px;
-            border-radius: 14px 14px 6px 6px;
+    <style>
+        :root {
+            --ground-color: #8da25d;
+            --hole-color: #3e2723; /* 深深咖啡色 (洞) */
+            --mole-color: #8d6e63; /* 經典地鼠褐 */
+            --mole-bonked: #e53935; /* 被打到的鮮紅色 */
         }
-        .mole::before { width: 8px; height: 6px; top: 14px; }
-        .mole::after { width: 3px; height: 3px; top: 10px; left: 8px; box-shadow: 9px 0 0 #333; }
-        .mole.bonked::after { font-size: 10px; top: 8px; letter-spacing: 1px; }
 
-        .mole-info { top: -60px; width: 75px; font-size: 10px; padding: 4px; }
-    }
-</style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            
+            /* --- 1. 背景：乾淨的天空藍 --- */
+            background-color: #87CEEB; 
+        }
+
+        h1 {
+            color: #fff;
+            text-shadow: 2px 2px 0 #333;
+            margin: 20px 0;
+            z-index: 10;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        /* --- 2. 地圖容器 (修復版) --- */
+        .map-container {
+            position: relative;
+            width: 95%;
+            max-width: 600px;
+            aspect-ratio: 0.65;
+            margin-bottom: 50px;
+
+            /* 使用標準背景圖 */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f1/Taiwan_Republic_of_China_location_map.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            
+            /* 使用濾鏡把原本灰色的地圖變成「半透明白色」 */
+            filter: brightness(0) invert(1) opacity(0.6) drop-shadow(0 0 5px rgba(255,255,255,0.5));
+        }
+
+        /* --- 洞的位置與互動 --- */
+        .hole-container {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+        }
+
+        .hole-container.active { z-index: 1000; }
+
+        /* --- 洞穴 --- */
+        .hole {
+            width: 100%;
+            height: 24px;
+            background: var(--hole-color);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5) inset;
+            z-index: 1; 
+        }
+
+        /* --- 城市標籤 --- */
+        .city-label {
+            position: absolute;
+            top: 10px; /* 在洞的上方 */
+            width: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 13px;
+            text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000; /* 強烈黑邊 */
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* --- 地鼠本體 --- */
+        .mole {
+            width: 44px;
+            height: 50px;
+            background: var(--mole-color);
+            border-radius: 22px 22px 10px 10px;
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            
+            transform: translateX(-50%) scale(0.1); /* 初始隱藏 */
+            opacity: 0;
+            
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 鼻子 (灰白色) */
+        .mole::before { 
+            content: ''; width: 14px; height: 10px; 
+            background: #d7ccc8;
+            border-radius: 50%; position: absolute; top: 22px;
+        }
+        
+        /* 眼睛 (正常) */
+        .mole::after { 
+            content: ''; width: 5px; height: 5px; 
+            background: #333;
+            border-radius: 50%; position: absolute; top: 15px; left: 12px;
+            box-shadow: 14px 0 0 #333;
+        }
+
+        /* --- 3. 被打到的狀態 (Bonked) --- */
+        .mole.bonked { 
+            background: var(--mole-bonked); /* 變紅 */
+        }
+        
+        .mole.bonked::after {
+            /* x x 眼睛 */
+            content: 'x x';
+            background: transparent; box-shadow: none;
+            font-size: 14px; font-weight: bold; top: 12px; left: 50%;
+            transform: translateX(-50%);
+            color: #fff; letter-spacing: 2px;
+        }
+
+        /* 被打到的動畫：歪頭倒下 */
+        .hole-container.active .mole.bonked {
+            transform: translateX(-50%) rotate(25deg) translateY(5px);
+            transition: transform 0.1s;
+        }
+
+        /* --- 天氣資訊牌 --- */
+        .mole-info {
+            background: white;
+            padding: 5px 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 12px;
+            border: 2px solid #333;
+            position: absolute;
+            top: -75px;
+            width: 90px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .mole-info strong { color: #d84315; font-size: 1.1em; display: block; margin-bottom: 2px;}
+
+        /* 彈出動畫 */
+        .hole-container.active .mole { 
+            transform: translateX(-50%) scale(1); 
+            opacity: 1;
+        }
+        .hole-container.active .mole-info { 
+            opacity: 1; 
+            transform: translateX(-50%) scale(1);
+        }
+
+        /* Loading */
+        #loading {
+            color: white;
+            font-size: 1.5em;
+            text-shadow: 1px 1px 2px #333;
+            position: absolute;
+            top: 50%;
+        }
+
+        /* --- RWD 手機版調整 --- */
+        @media (max-width: 600px) {
+            .hole-container { width: 36px; height: 36px; }
+            .hole { height: 14px; bottom: 8px; }
+            .city-label { font-size: 10px; top: 4px; }
+
+            .mole {
+                width: 28px; height: 34px; bottom: 14px;
+                border-radius: 14px 14px 6px 6px;
+            }
+            .mole::before { width: 8px; height: 6px; top: 14px; }
+            .mole::after { width: 3px; height: 3px; top: 10px; left: 8px; box-shadow: 9px 0 0 #333; }
+            .mole.bonked::after { font-size: 10px; top: 8px; letter-spacing: 1px; }
+
+            .mole-info { top: -60px; width: 75px; font-size: 10px; padding: 4px; }
+        }
+    </style>
 </head>
 <body>
 
     <h1>🌧️ Weather Whack-a-Mole 🌤️</h1>
     <div id="loading">Scouting for moles...</div>
-    <div id="game-board" class="game-board"></div>
+    <div id="game-board" class="map-container"></div>
 
     <script>
-        // ⚠️ CHECK THIS LINK: Must be HTTPS
+        // ⚠️ 使用你的 Zeabur HTTPS URL
         const API_URL = 'https://hex-final.zeabur.app/api/weather'; 
         
         const board = document.getElementById('game-board');
@@ -209,7 +217,7 @@
         let citiesData = [];
         let autoPlayTimeout = null;
 
-        // 🗺️ COORDINATES: Maps city names to % positions (Top, Left)
+        // 🗺️ 台灣地圖座標 (Top%, Left%)
         const coordinates = {
             "基隆市": { t: 5, l: 72 },
             "臺北市": { t: 8, l: 68 },
@@ -252,18 +260,17 @@
         }
 
         function renderMap() {
-            board.className = 'map-container'; // Ensures CSS class matches
             board.innerHTML = '';
+            // 這裡不需要重設 class，因為 HTML 已經預設好 map-container 了
 
             citiesData.forEach((city, index) => {
-                // Use coordinate or default to center if missing
                 const coords = coordinates[city.name] || { t: 50, l: 50 };
 
                 const container = document.createElement('div');
                 container.className = 'hole-container';
                 container.dataset.index = index;
                 
-                // Set Position
+                // 定位
                 container.style.top = coords.t + '%';
                 container.style.left = coords.l + '%';
 
@@ -279,9 +286,9 @@
                     <div class="city-label">${city.name}</div>
                 `;
 
-                // Click Event
+                // 點擊事件
                 container.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent hitting the background
+                    e.stopPropagation();
                     whackMole(index);
                 });
 
@@ -290,21 +297,21 @@
         }
 
         function whackMole(index) {
-            clearTimeout(autoPlayTimeout); // Pause auto-play
+            clearTimeout(autoPlayTimeout);
             
-            // 1. Reset all other moles
+            // 1. 重置其他地鼠
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.mole').forEach(el => el.classList.remove('bonked'));
 
-            // 2. Activate the clicked mole
+            // 2. 觸發目標地鼠
             const targetContainer = board.children[index];
             const targetMole = targetContainer.querySelector('.mole');
 
             if (targetContainer) {
-                targetContainer.classList.add('active'); // Pop up
-                targetMole.classList.add('bonked');      // Turn red
+                targetContainer.classList.add('active'); // 彈出
+                targetMole.classList.add('bonked');      // 變色+死掉
                 
-                // Remove red color after 0.5s (but keep mole up)
+                // 0.5秒後變回正常顏色 (但保持彈出狀態方便看字)
                 setTimeout(() => {
                     targetMole.classList.remove('bonked');
                 }, 500);
@@ -316,7 +323,7 @@
             if (activeMoles.length > 0) {
                 activeMoles.forEach(el => el.classList.remove('active'));
                 
-                // Restart the "Game" (Random mole pops up)
+                // 自動隨機出現下一隻
                 autoPlayTimeout = setTimeout(showRandomMole, 1000);
             }
         }
@@ -326,22 +333,22 @@
             
             const randomIdx = Math.floor(Math.random() * citiesData.length);
             
-            // Reset others
+            // 先隱藏其他的
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
             
-            // Pop up random mole (without 'bonked' red color)
+            // 隨機彈出 (不帶 bonked 紅色)
             const target = board.children[randomIdx];
             if(target) target.classList.add('active');
         }
 
-        // Click background to hide mole
+        // 點擊背景隱藏
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.hole-container')) {
                 hideAllMoles();
             }
         });
 
-        // Start
+        // 開始
         fetchWeather();
     </script>
 </body>
