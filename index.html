@@ -7,161 +7,189 @@
     <style>
         :root {
             --ground-color: #8da25d;
-            --hole-color: #5d4037;
-            --sky-color: #87CEEB;
+            --hole-color: #3e2723;
+            --mole-color: #a1887f;
+            --mole-bonked: #e57373;
         }
 
         body {
             margin: 0;
-            padding: 20px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--ground-color);
-            background-image: radial-gradient(#9db56a 15%, transparent 16%), radial-gradient(#9db56a 15%, transparent 16%);
-            background-size: 60px 60px;
-            background-position: 0 0, 30px 30px;
+            background-color: #aaddff;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="%23FFF" stroke="%23000" stroke-width="2" d="M19.5 3.5L18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2 4.5 3.5 3 2v20l1.5-1.5L6 22l1.5-1.5L9 22l1.5-1.5L12 22l1.5-1.5L15 22l1.5-1.5L18 22l1.5-1.5L21 22V2l-1.5 1.5z"/></svg>'), auto; /* Fun Hammer Cursor Concept */
         }
 
         h1 {
-            color: white;
+            color: #fff;
             text-shadow: 2px 2px 0 #333;
-            margin-bottom: 30px;
+            margin: 20px 0;
+            z-index: 10;
             text-align: center;
+            font-size: 1.8rem;
         }
 
-        /* Game Board Grid */
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 40px 20px;
-            width: 100%;
-            max-width: 1000px;
-            padding-bottom: 50px;
-        }
-
-        /* The Hole Container */
-        .hole-container {
+        /* --- MAP CONTAINER --- */
+        .map-container {
             position: relative;
-            width: 120px;
-            height: 100px;
-            margin: 0 auto;
+            width: 95%;              /* Takes almost full width on mobile */
+            max-width: 600px;        /* Stops getting too big on desktop */
+            aspect-ratio: 0.65;      /* Keeps Taiwan shape */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/03/Taiwan_blank_map.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-bottom: 50px;
         }
 
-        /* The Dirt Mound */
+        /* --- HOLE CONTAINER (Desktop Default) --- */
+        .hole-container {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            /* Debugging tip: toggle background below to see click zones */
+            /* background: rgba(255,0,0,0.1); */ 
+        }
+
+        /* High Z-Index when active */
+        .hole-container.active { z-index: 1000; }
+
+        /* The Dirt Hole */
         .hole {
             width: 100%;
-            height: 40px;
+            height: 20px; /* Flattened oval */
             background: var(--hole-color);
             border-radius: 50%;
             position: absolute;
-            bottom: 0;
-            z-index: 2;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3) inset;
+            bottom: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
         }
 
-        /* City Name Label */
+        /* City Label */
         .city-label {
             position: absolute;
-            bottom: -25px;
-            width: 100%;
+            bottom: -15px;
+            width: 100px;
+            left: 50%;
+            transform: translateX(-50%);
             text-align: center;
-            color: white;
+            color: #333;
             font-weight: bold;
-            font-size: 1.1em;
-            text-shadow: 1px 1px 2px black;
-            z-index: 3;
+            font-size: 12px;
+            text-shadow: 1px 1px 0px white;
+            pointer-events: none;
+            white-space: nowrap;
         }
 
-        /* The Cute Mole */
+        /* --- THE MOLE --- */
         .mole {
-            width: 80px;
-            height: 90px;
-            background: #a1887f; /* Mole fur color */
-            border-radius: 40px 40px 10px 10px;
+            width: 40px;
+            height: 45px;
+            background: var(--mole-color);
+            border-radius: 20px 20px 10px 10px;
             position: absolute;
-            bottom: 15px; /* Hidden position */
-            left: 20px;
-            transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045); /* Pop down effect */
-            z-index: 1; /* Behind the front of the hole */
+            bottom: 15px; /* Sits inside hole */
+            left: 50%;
+            transform: translateX(-50%) translateY(100%); /* Start hidden */
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            pointer-events: none; /* Let clicks pass through to container */
         }
 
-        /* Mole Face Details */
+        /* Mole Face */
         .mole::before { /* Snout */
-            content: '';
-            width: 20px;
-            height: 14px;
-            background: #ffccbc;
-            border-radius: 50%;
-            position: absolute;
-            top: 45px;
+            content: ''; width: 12px; height: 8px; background: #ffccbc;
+            border-radius: 50%; position: absolute; top: 18px;
         }
         .mole::after { /* Eyes */
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: #333;
-            border-radius: 50%;
-            position: absolute;
-            top: 35px;
-            left: 28px;
-            box-shadow: 18px 0 0 #333;
+            content: ''; width: 4px; height: 4px; background: #333;
+            border-radius: 50%; position: absolute; top: 12px; left: 12px;
+            box-shadow: 12px 0 0 #333;
         }
 
-        /* Info Board held by Mole */
+        /* Bonked State */
+        .mole.bonked { background: var(--mole-bonked); }
+        .mole.bonked::after {
+            content: 'x x';
+            background: transparent; box-shadow: none;
+            font-size: 10px; font-weight: bold; top: 10px; left: 10px; color: #333;
+        }
+
+        /* Info Board */
         .mole-info {
             background: white;
-            padding: 5px;
-            border-radius: 8px;
+            padding: 4px;
+            border-radius: 4px;
             text-align: center;
-            font-size: 0.75em;
+            font-size: 11px;
             border: 2px solid #333;
             position: absolute;
-            top: -50px;
-            width: 100px;
+            top: -60px;
+            width: 80px;
+            left: 50%;
+            transform: translateX(-50%);
             opacity: 0;
+            pointer-events: none;
             transition: opacity 0.2s;
-            pointer-events: auto;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
 
-        .mole-info strong {
-            display: block;
-            color: #d84315;
-            font-size: 1.2em;
+        /* Active Animation */
+        .hole-container.active .mole { 
+            transform: translateX(-50%) translateY(0); 
+        }
+        .hole-container.active .mole-info { 
+            opacity: 1; 
         }
 
-        /* Active State (Mole Pops Up) */
-        .hole-container.active .mole {
-            transform: translateY(0);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy pop up */
-        }
+        /* --- 📱 MOBILE RESPONSIVE RULES 📱 --- */
+        @media (max-width: 600px) {
+            /* Shrink the container area so holes don't overlap */
+            .hole-container {
+                width: 30px;
+                height: 30px;
+            }
 
-        .hole-container.active .mole-info {
-            opacity: 1;
-            transition-delay: 0.3s;
-        }
+            /* Shrink the Mole */
+            .mole {
+                width: 24px;
+                height: 30px;
+                bottom: 8px;
+                border-radius: 10px 10px 5px 5px;
+            }
 
-        /* Loading State */
-        #loading {
-            color: white;
-            font-size: 1.5em;
-            animation: pulse 1s infinite;
-        }
+            /* Adjust Face */
+            .mole::before { width: 8px; height: 5px; top: 12px; } /* Snout */
+            .mole::after { width: 2px; height: 2px; top: 8px; left: 7px; box-shadow: 8px 0 0 #333; } /* Eyes */
+            .mole.bonked::after { font-size: 8px; top: 6px; left: 6px; }
 
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            100% { opacity: 1; }
+            /* Shrink Hole Dirt */
+            .hole { height: 10px; bottom: 2px; }
+
+            /* Hide text labels on mobile to clean up map (optional) */
+            /* Or make them very small */
+            .city-label {
+                font-size: 9px;
+                bottom: -12px;
+                text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+                background: rgba(255,255,255,0.4); /* background helps readability */
+                padding: 0 2px;
+                border-radius: 4px;
+            }
+
+            /* Adjust Info Board Position */
+            .mole-info {
+                top: -55px;
+                width: 70px;
+                font-size: 10px;
+                z-index: 2000; /* Ensure it's on top of everything */
+            }
         }
     </style>
 </head>
@@ -172,13 +200,40 @@
     <div id="game-board" class="game-board"></div>
 
     <script>
-        const API_URL = 'https://hex-final.zeabur.app/api/weather'; // Adjust if backend port differs
+        // ⚠️ CHECK THIS LINK: Must be HTTPS
+        const API_URL = 'https://hex-final.zeabur.app/api/weather'; 
+        
         const board = document.getElementById('game-board');
         const loading = document.getElementById('loading');
         let citiesData = [];
         let autoPlayTimeout = null;
 
-        // Fetch Weather Data
+        // 🗺️ COORDINATES: Maps city names to % positions (Top, Left)
+        const coordinates = {
+            "基隆市": { t: 5, l: 72 },
+            "臺北市": { t: 8, l: 68 },
+            "新北市": { t: 12, l: 70 },
+            "桃園市": { t: 10, l: 55 },
+            "新竹市": { t: 16, l: 50 },
+            "新竹縣": { t: 18, l: 58 },
+            "苗栗縣": { t: 22, l: 48 },
+            "臺中市": { t: 30, l: 42 },
+            "彰化縣": { t: 36, l: 38 },
+            "南投縣": { t: 38, l: 55 },
+            "雲林縣": { t: 45, l: 35 },
+            "嘉義市": { t: 50, l: 38 },
+            "嘉義縣": { t: 50, l: 45 },
+            "臺南市": { t: 60, l: 32 },
+            "高雄市": { t: 70, l: 35 },
+            "屏東縣": { t: 80, l: 45 },
+            "宜蘭縣": { t: 20, l: 80 },
+            "花蓮縣": { t: 40, l: 75 },
+            "臺東縣": { t: 70, l: 65 },
+            "澎湖縣": { t: 45, l: 10 },
+            "金門縣": { t: 15, l: 5 },
+            "連江縣": { t: 2, l: 30 }
+        };
+
         async function fetchWeather() {
             try {
                 const res = await fetch(API_URL);
@@ -186,7 +241,7 @@
                 
                 if (data.success) {
                     citiesData = data.data;
-                    renderHoles();
+                    renderMap();
                     loading.style.display = 'none';
                 }
             } catch (err) {
@@ -195,19 +250,26 @@
             }
         }
 
-        // Create the Grid
-        function renderHoles() {
+        function renderMap() {
+            board.className = 'map-container'; // Ensures CSS class matches
             board.innerHTML = '';
+
             citiesData.forEach((city, index) => {
+                // Use coordinate or default to center if missing
+                const coords = coordinates[city.name] || { t: 50, l: 50 };
+
                 const container = document.createElement('div');
                 container.className = 'hole-container';
                 container.dataset.index = index;
+                
+                // Set Position
+                container.style.top = coords.t + '%';
+                container.style.left = coords.l + '%';
 
-                // Structure: Mole (with info) -> Hole (mask) -> Label
                 container.innerHTML = `
-                    <div class="mole">
+                    <div class="mole" id="mole-${index}">
                         <div class="mole-info">
-                            <strong>${city.minTemp} - ${city.maxTemp}</strong>
+                            <strong>${city.minTemp}-${city.maxTemp}</strong>
                             <div>${city.condition}</div>
                             <div>☔ ${city.pop}</div>
                         </div>
@@ -216,60 +278,70 @@
                     <div class="city-label">${city.name}</div>
                 `;
 
-                // Click event for this hole
+                // Click Event
                 container.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Stop click from reaching body
-                    activateMole(index);
+                    e.stopPropagation(); // Prevent hitting the background
+                    whackMole(index);
                 });
 
                 board.appendChild(container);
             });
         }
 
-        // Show specific mole
-        function activateMole(index) {
-            clearTimeout(autoPlayTimeout); // Stop auto-play temporarily
+        function whackMole(index) {
+            clearTimeout(autoPlayTimeout); // Pause auto-play
             
-            // Hide all others first? Or allow multiple? 
-            // "Whack a mole" usually has one or two. Let's reset others for focus.
+            // 1. Reset all other moles
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.mole').forEach(el => el.classList.remove('bonked'));
 
-            const target = board.children[index];
-            if (target) {
-                target.classList.add('active');
+            // 2. Activate the clicked mole
+            const targetContainer = board.children[index];
+            const targetMole = targetContainer.querySelector('.mole');
+
+            if (targetContainer) {
+                targetContainer.classList.add('active'); // Pop up
+                targetMole.classList.add('bonked');      // Turn red
+                
+                // Remove red color after 0.5s (but keep mole up)
+                setTimeout(() => {
+                    targetMole.classList.remove('bonked');
+                }, 500);
             }
         }
 
-        // Hide all moles
         function hideAllMoles() {
             const activeMoles = document.querySelectorAll('.hole-container.active');
             if (activeMoles.length > 0) {
                 activeMoles.forEach(el => el.classList.remove('active'));
                 
-                // As per request: "once the user clicks elsewhere... another mole will appear"
-                // We trigger a random mole after a short delay
-                autoPlayTimeout = setTimeout(showRandomMole, 800);
+                // Restart the "Game" (Random mole pops up)
+                autoPlayTimeout = setTimeout(showRandomMole, 1000);
             }
         }
 
-        // Show a random mole (Game Logic)
         function showRandomMole() {
             if (citiesData.length === 0) return;
+            
             const randomIdx = Math.floor(Math.random() * citiesData.length);
-            activateMole(randomIdx);
+            
+            // Reset others
+            document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
+            
+            // Pop up random mole (without 'bonked' red color)
+            const target = board.children[randomIdx];
+            if(target) target.classList.add('active');
         }
 
-        // Global Click Listener (Clicking "elsewhere")
+        // Click background to hide mole
         document.addEventListener('click', (e) => {
-            // If click is NOT on a hole-container
             if (!e.target.closest('.hole-container')) {
                 hideAllMoles();
             }
         });
 
-        // Initialize
+        // Start
         fetchWeather();
-
     </script>
 </body>
 </html>
