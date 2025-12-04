@@ -36,28 +36,18 @@
             font-weight: bold;
         }
 
-        /* --- 🌟 副標題 --- */
-        .subtitle {
-            color: #fff;
-            text-shadow: 2px 2px 0 #333;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            z-index: 10;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-
         /* --- 地圖容器 --- */
         .map-container {
             position: relative;
             width: 90%;
-            max-width: 450px;
-            aspect-ratio: 0.6; /* 配合 0-100 SVG 的比例 */
+            max-width: 450px; /* 寬度限制 */
+            aspect-ratio: 0.6; /* 台灣長寬比約 0.6 */
             margin-bottom: 50px;
+            /* 暫時加個邊框方便你確認容器位置 (之後可拿掉) */
+            /* border: 1px dashed rgba(255,255,255,0.3); */
         }
 
-        /* --- 內嵌 SVG 地圖樣式 --- */
+        /* --- 🌟 內嵌 SVG 地圖 --- */
         .taiwan-map-svg {
             position: absolute;
             top: 0;
@@ -65,12 +55,13 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            pointer-events: none;
-            overflow: visible;
+            overflow: visible; /* 允許稍微超出 */
+            pointer-events: none; /* 讓點擊穿透 */
         }
 
+        /* 地圖本體的樣式 */
         .map-path {
-            fill: rgba(255, 255, 255, 0.4); /* 半透明白色 */
+            fill: rgba(255, 255, 255, 0.4); /* 半透明白色填充 */
             stroke: rgba(255, 255, 255, 0.8); /* 白色邊框 */
             stroke-width: 1;
             filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3)); /* 發光效果 */
@@ -188,8 +179,7 @@
 
     <h1>🌧️ Weather Whack-a-Mole 🌤️</h1>
     <div class="subtitle">請點選所在城市</div>
-    
-    <div id="loading">Scouting for moles...</div>
+    <div id="loading">尋找地鼠中...</div>
     
     <div id="game-board" class="map-container">
         <svg class="taiwan-map-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -198,6 +188,7 @@
                      C88,60 70,90 50,98 
                      C30,90 15,65 18,40 
                      C20,25 40,10 50,2 Z" />
+            
             <circle class="map-path" cx="15" cy="45" r="3" />
             <circle class="map-path" cx="8" cy="20" r="2" />
         </svg>
@@ -212,7 +203,7 @@
         let citiesData = [];
         let autoPlayTimeout = null;
 
-        // 🗺️ 針對這張 0-100 地圖的最佳化座標
+        // 🗺️ 針對這張手繪地圖 (0-100) 校正的座標
         const coordinates = {
             "基隆市": { t: 8, l: 65 },
             "臺北市": { t: 12, l: 60 },
@@ -255,7 +246,7 @@
         }
 
         function renderMap() {
-            // 只清除洞，保留地圖背景
+            // 清除舊的洞，但保留 SVG 地圖
             const oldHoles = board.querySelectorAll('.hole-container');
             oldHoles.forEach(h => h.remove());
 
@@ -295,6 +286,7 @@
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.mole').forEach(el => el.classList.remove('bonked'));
 
+            // 使用 dataset 確保抓到正確的元素
             const allHoles = document.querySelectorAll('.hole-container');
             const target = Array.from(allHoles).find(h => h.dataset.index == index);
 
