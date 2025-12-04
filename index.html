@@ -37,23 +37,32 @@
         /* --- 地圖容器 --- */
         .map-container {
             position: relative;
-            width: 95%;
-            max-width: 480px; /* 台灣形狀比較瘦長 */
-            height: 720px;    /* 固定高度確保比例 */
+            width: 90%;
+            max-width: 450px; /* 寬度限制 */
+            aspect-ratio: 0.6; /* 台灣長寬比約 0.6 */
             margin-bottom: 50px;
+            /* 暫時加個邊框方便你確認容器位置 (之後可拿掉) */
+            /* border: 1px dashed rgba(255,255,255,0.3); */
         }
 
-        /* --- 🌟 內嵌 SVG 地圖樣式 --- */
-        .taiwan-map {
+        /* --- 🌟 內嵌 SVG 地圖 --- */
+        .taiwan-map-svg {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            fill: rgba(255, 255, 255, 0.5); /* 半透明白色 */
-            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); /* 發光邊緣 */
             z-index: 0;
+            overflow: visible; /* 允許稍微超出 */
             pointer-events: none; /* 讓點擊穿透 */
+        }
+
+        /* 地圖本體的樣式 */
+        .map-path {
+            fill: rgba(255, 255, 255, 0.4); /* 半透明白色填充 */
+            stroke: rgba(255, 255, 255, 0.8); /* 白色邊框 */
+            stroke-width: 1;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3)); /* 發光效果 */
         }
 
         /* --- 洞 --- */
@@ -70,7 +79,7 @@
 
         .hole {
             width: 100%;
-            height: 18px;
+            height: 16px;
             background: var(--hole-color);
             border-radius: 50%;
             position: absolute;
@@ -81,7 +90,7 @@
 
         .city-label {
             position: absolute;
-            top: 8px;
+            top: 6px;
             width: 80px;
             left: 50%;
             transform: translateX(-50%);
@@ -101,7 +110,7 @@
             background: var(--mole-color);
             border-radius: 18px 18px 8px 8px;
             position: absolute;
-            bottom: 20px;
+            bottom: 18px;
             left: 50%;
             transform: translateX(-50%) scale(0.1);
             opacity: 0;
@@ -154,7 +163,7 @@
 
         /* 手機版 RWD */
         @media (max-width: 600px) {
-            .map-container { height: 500px; }
+            .map-container { max-width: 90%; }
             .hole-container { width: 30px; height: 30px; }
             .hole { height: 10px; bottom: 8px; }
             .city-label { font-size: 10px; top: 4px; }
@@ -170,11 +179,15 @@
     <div id="loading">Scouting for moles...</div>
     
     <div id="game-board" class="map-container">
-        <svg class="taiwan-map" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
-            <path d="M190,20 C220,10 280,40 310,100 C330,140 330,220 310,300 C290,400 240,500 200,560 C170,580 140,550 130,520 C100,450 80,350 90,250 C100,150 140,50 190,20 Z" />
-            <path d="M60,350 Q70,340 80,350 Q70,370 60,360 Z" />
-            <path d="M20,200 Q40,190 30,210 Z" />
-            <path d="M50,80 Q60,70 55,90 Z" />
+        <svg class="taiwan-map-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path class="map-path" d="M50,2 
+                     C60,10 80,20 85,40 
+                     C88,60 70,90 50,98 
+                     C30,90 15,65 18,40 
+                     C20,25 40,10 50,2 Z" />
+            
+            <circle class="map-path" cx="15" cy="45" r="3" />
+            <circle class="map-path" cx="8" cy="20" r="2" />
         </svg>
     </div>
 
@@ -187,30 +200,30 @@
         let citiesData = [];
         let autoPlayTimeout = null;
 
-        // 🗺️ 針對這張手繪 SVG 校正的座標
+        // 🗺️ 針對這張手繪地圖 (0-100) 校正的座標
         const coordinates = {
             "基隆市": { t: 8, l: 65 },
             "臺北市": { t: 12, l: 60 },
             "新北市": { t: 16, l: 65 },
-            "桃園市": { t: 15, l: 50 },
-            "新竹市": { t: 22, l: 45 },
-            "新竹縣": { t: 24, l: 52 },
-            "苗栗縣": { t: 30, l: 42 },
-            "臺中市": { t: 40, l: 38 },
-            "彰化縣": { t: 48, l: 32 },
+            "桃園市": { t: 15, l: 45 },
+            "新竹市": { t: 22, l: 40 },
+            "新竹縣": { t: 24, l: 48 },
+            "苗栗縣": { t: 30, l: 40 },
+            "臺中市": { t: 40, l: 35 },
+            "彰化縣": { t: 48, l: 30 },
             "南投縣": { t: 50, l: 50 },
-            "雲林縣": { t: 58, l: 30 },
-            "嘉義市": { t: 65, l: 32 },
-            "嘉義縣": { t: 65, l: 40 },
-            "臺南市": { t: 75, l: 28 },
-            "高雄市": { t: 82, l: 32 },
+            "雲林縣": { t: 58, l: 28 },
+            "嘉義市": { t: 64, l: 30 },
+            "嘉義縣": { t: 65, l: 38 },
+            "臺南市": { t: 75, l: 25 },
+            "高雄市": { t: 82, l: 30 },
             "屏東縣": { t: 90, l: 45 },
             "宜蘭縣": { t: 25, l: 75 },
             "花蓮縣": { t: 45, l: 70 },
             "臺東縣": { t: 75, l: 60 },
-            "澎湖縣": { t: 50, l: 12 },
-            "金門縣": { t: 28, l: 5 },
-            "連江縣": { t: 10, l: 10 }
+            "澎湖縣": { t: 48, l: 15 },
+            "金門縣": { t: 20, l: 8 },
+            "連江縣": { t: 5, l: 20 }
         };
 
         async function fetchWeather() {
@@ -230,8 +243,7 @@
         }
 
         function renderMap() {
-            // 注意：這裡不清空 innerHTML，否則會把 SVG 刪掉
-            // 我們只清除舊的洞 (如果有 class="hole-container")
+            // 清除舊的洞，但保留 SVG 地圖
             const oldHoles = board.querySelectorAll('.hole-container');
             oldHoles.forEach(h => h.remove());
 
@@ -271,9 +283,7 @@
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.mole').forEach(el => el.classList.remove('bonked'));
 
-            const targetContainer = board.children[index]; // 這裡要注意 index 對應問題
-            // 因為 SVG 是第一個 child，所以 hole-container 從 index+1 開始
-            // 更安全的寫法是用 dataset 抓取
+            // 使用 dataset 確保抓到正確的元素
             const allHoles = document.querySelectorAll('.hole-container');
             const target = Array.from(allHoles).find(h => h.dataset.index == index);
 
