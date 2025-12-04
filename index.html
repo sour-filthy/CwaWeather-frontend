@@ -10,9 +10,9 @@
     <style>
         :root {
             --ground-color: #8da25d;
-            --hole-color: #3e2723; /* 深深咖啡色 (洞) */
-            --mole-color: #8d6e63; /* 經典地鼠褐 */
-            --mole-bonked: #e53935; /* 被打到的鮮紅色 */
+            --hole-color: #3e2723;
+            --mole-color: #8d6e63;
+            --mole-bonked: #e53935;
         }
 
         body {
@@ -23,7 +23,7 @@
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
-            background-color: #87CEEB; /* 天空藍 */
+            background-color: #87CEEB; /* 天空藍背景 */
         }
 
         h1 {
@@ -39,26 +39,33 @@
         .map-container {
             position: relative;
             width: 95%;
-            max-width: 600px;
-            aspect-ratio: 0.65; /* 維持台灣形狀比例 */
+            max-width: 550px; /* 稍微縮窄一點，讓比例更像台灣 */
+            aspect-ratio: 0.7; /* 台灣的長寬比 */
             margin-bottom: 50px;
         }
 
-        /* --- 🌟 關鍵修正：內嵌式白色地圖背景 --- */
-        /* 不再依賴外部連結或濾鏡，直接使用編碼過的白色地圖 */
+        /* --- 🌟 修正：正確的台灣地圖背景 --- */
         .map-container::before {
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             
-            /* 這裡是一長串編碼過的 SVG，已經預設為半透明白色 */
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 438 677'%3E%3Cg fill='%23ffffff' fill-opacity='0.5'%3E%3Cpath d='M428.3 262.4c-2.1-6.1-12.1-12.6-14.4-18.2-2.1-5.2.2-15.1-2.4-20-2.8-5.2-11.5-7.7-14.4-13.2-1.9-3.7-1.3-11.1-3.7-14.7-3.5-5.2-13.5-6.6-16.7-12.4-2.2-3.9-.8-11.9-3.2-15.7-3.2-5.2-12.7-7.5-15.8-12.8-2.2-3.7-.8-11.8-3.4-15.7-3.4-5.2-13.3-6.9-16.3-12.7-1.9-3.7-.8-11.3-3.1-15.2-2.8-4.8-11.4-7.2-14.6-12.1-2.5-3.9-1.8-11.8-4.5-15.7-3.8-5.5-14.6-6.1-17.8-12-2.1-3.9-1-12.1-3.7-15.8-3.9-5.5-14.8-5.5-18.4-11.2-2.2-3.6-1.5-11.4-3.8-15.1-3.5-5.6-13.4-6.9-16.6-12.6-2.1-3.7-1.1-11.3-3.4-15.1-3.2-5.3-12.7-7.3-16.1-12.6-2.4-3.8-1.8-11.4-4.4-15.2-4.1-5.8-15.4-5-18.9-11.2-1.9-3.2-1.5-10.1-3.5-13.3-2.8-4.6-10.7-6.6-14-11.2-3-4.2-2.8-13-6.1-16.9-4.2-5.1-15.9-3.3-19.6-8.9C116.9 6.6 118 0 115.2 0c-3.7 0-10.6 6.6-15.7 6.6-6.1 0-10.5-6.6-17.2-6.6-3 0-8.9 2.9-11.3 5.3-5 5-4.7 15.8-10.4 19.8-4.6 3.2-13.2 1.3-18.4 3.9-5.4 2.6-7.9 10.6-12.8 14.6-5.1 4.2-14.3 4.6-18.8 9.7-4 4.6-2.8 14.1-6.2 19.3-4.1 6.4-13.9 9-16.9 15.8-2.2 5-.2 14.6-2.7 19.4-3.5 6.5-12.9 9.6-15.5 16.6-1.7 4.7.5 13.8-1.4 18.4-3.2 7.7-14.1 10.8-16.3 18.8-1.3 4.8 1.5 13.3.2 18.2-2.9 9.5-16 12.7-17.3 22.6-.5 3.8 1.4 10.6.6 14.5-2.3 11.5-18.5 14.9-18.4 26.9 0 3.6 2.5 9.5 2.5 13.1 0 12.5-14.7 17.2-12.9 30.1.5 3.4 3.6 8.5 4.2 12 1.9 12.2-11.5 19.3-8 32.3 1 3.8 5 9 6.2 12.8 3.1 10.5-8.1 20.2-3.8 31.8 1.8 4.7 6.9 10.4 8.9 15 4.9 11-2.8 23.9 3.5 34.3 2.8 4.6 8.9 9.2 11.9 13.7 6.7 10 2.2 25.1 10.5 33.8 3.7 3.9 11.1 6.7 15 10.3 9.2 8.3 8.9 23.8 19.3 30.6 4.6 3 13.3 4.1 18.1 6.8 10.4 5.8 14.3 20.8 26.3 25 5 1.8 13.7.7 18.8 2.3 13 4.1 19 19.3 33.3 21.5 4.1.6 11.2-3.2 15.3-2.9 12.8.8 23 14.9 36.5 13.8 3.7-.3 9.7-6 13.3-6.8 14.6-3.1 27 8 42 2.5 4.1-1.5 8.5-8.4 12.5-10.2 9.7-4.3 23.7 3.9 33.2-1.8 6.4-3.8 6.4-16.9 13.6-19.6 5.6-2.1 15.3 1.3 20.2-.3 13-4.1 18.9-19.1 33.1-21.1 4.6-.7 12.1 3.1 16.5 2.1 11.8-2.8 20.3-16.4 33-17.5 5.5-.5 13.4 4.1 18.7 3.4 11.4-1.5 22.2-13.3 33.9-13.1 2.9 0 7.9 2.4 10.7 2.2 14-1.3 22-17 35-20.2 2.5-.6 6.9 1.3 9.3.6 12.1-3.6 19.3-18.6 30.8-23.7 3.2-1.4 8.9 0 12.1-1.6 12.1-6.1 17.2-21.5 28.3-29.2 2.9-2 8.5-1.2 11.4-3.3 12.2-8.9 14.9-25.3 26-35.6 2.1-1.9 6.3-2.7 8.5-4.7 11.2-10.4 14.8-27 24.8-38.6 2.2-2.6 7.2-2.9 9.4-5.6 12.2-15.1 10.8-35.3 21.8-50.1 2.2-3 7.7-3 10-6 12.1-16.1 9.6-37.3 20.2-53.5 1.9-3 7.3-3.7 9.3-6.7 10.4-15.7 9.8-35.2 19-51.6 2.5-4.5 8.8-4.3 11.4-9 7-12.6 10.3-26.6 16.1-39.9z'/%3E%3C/g%3E%3C/svg%3E");
+            /* 使用維基百科的 SVG 連結，這是最標準的台灣形狀 */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/03/Taiwan_blank_map.svg');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             
-            z-index: 0; /* 在最底層 */
-            pointer-events: none; 
+            /* 濾鏡魔法：
+               1. brightness(0): 把地圖變全黑
+               2. invert(1): 把全黑變全白
+               3. opacity(0.6): 變半透明
+               4. drop-shadow: 增加一點邊緣發光感
+            */
+            filter: brightness(0) invert(1) opacity(0.6) drop-shadow(0 0 2px rgba(255,255,255,0.5));
+            
+            z-index: 0;
+            pointer-events: none;
         }
 
         /* --- 洞的位置 --- */
@@ -68,10 +75,9 @@
             height: 60px;
             transform: translate(-50%, -50%);
             cursor: pointer;
-            z-index: 1; /* 比地圖高 */
+            z-index: 1;
         }
 
-        /* 被啟用時層級最高 */
         .hole-container.active { z-index: 1000; }
 
         /* --- 洞穴 --- */
@@ -102,7 +108,7 @@
             z-index: 3;
         }
 
-        /* --- 地鼠本體 --- */
+        /* --- 地鼠 --- */
         .mole {
             width: 44px;
             height: 50px;
@@ -128,7 +134,7 @@
             border-radius: 50%; position: absolute; top: 22px;
         }
         
-        /* 眼睛 */
+        /* 眼睛 (正常) */
         .mole::after { 
             content: ''; width: 5px; height: 5px; 
             background: #333;
@@ -148,7 +154,7 @@
             color: #fff; letter-spacing: 2px;
         }
 
-        /* 歪頭倒下動畫 */
+        /* 歪頭動畫 */
         .hole-container.active .mole.bonked {
             transform: translateX(-50%) rotate(25deg) translateY(5px);
             transition: transform 0.1s;
@@ -188,7 +194,7 @@
             color: white; font-size: 1.5em; text-shadow: 1px 1px 2px #333; position: absolute; top: 50%;
         }
 
-        /* --- 手機版 --- */
+        /* --- 手機版 RWD --- */
         @media (max-width: 600px) {
             .hole-container { width: 36px; height: 36px; }
             .hole { height: 14px; bottom: 8px; }
@@ -208,7 +214,7 @@
     <div id="game-board" class="map-container"></div>
 
     <script>
-        // ⚠️ 使用你的 Zeabur HTTPS URL
+        // ⚠️ 請確認這是你的 Zeabur URL
         const API_URL = 'https://hex-final.zeabur.app/api/weather'; 
         
         const board = document.getElementById('game-board');
@@ -216,30 +222,30 @@
         let citiesData = [];
         let autoPlayTimeout = null;
 
-        // 🗺️ 台灣地圖座標 (Top%, Left%)
+        // 🗺️ 台灣地圖座標微調 (針對新的 SVG 圖片)
         const coordinates = {
-            "基隆市": { t: 5, l: 72 },
-            "臺北市": { t: 8, l: 68 },
-            "新北市": { t: 12, l: 70 },
-            "桃園市": { t: 10, l: 55 },
-            "新竹市": { t: 16, l: 50 },
-            "新竹縣": { t: 18, l: 58 },
-            "苗栗縣": { t: 22, l: 48 },
+            "基隆市": { t: 3, l: 75 },
+            "臺北市": { t: 6, l: 70 },
+            "新北市": { t: 10, l: 72 },
+            "桃園市": { t: 8, l: 58 },
+            "新竹市": { t: 14, l: 52 },
+            "新竹縣": { t: 16, l: 60 },
+            "苗栗縣": { t: 20, l: 48 },
             "臺中市": { t: 30, l: 42 },
-            "彰化縣": { t: 36, l: 38 },
+            "彰化縣": { t: 36, l: 35 },
             "南投縣": { t: 38, l: 55 },
-            "雲林縣": { t: 45, l: 35 },
-            "嘉義市": { t: 50, l: 38 },
-            "嘉義縣": { t: 50, l: 45 },
-            "臺南市": { t: 60, l: 32 },
-            "高雄市": { t: 70, l: 35 },
-            "屏東縣": { t: 80, l: 45 },
-            "宜蘭縣": { t: 20, l: 80 },
-            "花蓮縣": { t: 40, l: 75 },
-            "臺東縣": { t: 70, l: 65 },
-            "澎湖縣": { t: 45, l: 10 },
+            "雲林縣": { t: 45, l: 32 },
+            "嘉義市": { t: 51, l: 36 },
+            "嘉義縣": { t: 52, l: 42 },
+            "臺南市": { t: 62, l: 30 },
+            "高雄市": { t: 72, l: 35 },
+            "屏東縣": { t: 82, l: 45 },
+            "宜蘭縣": { t: 18, l: 82 },
+            "花蓮縣": { t: 40, l: 78 },
+            "臺東縣": { t: 72, l: 65 },
+            "澎湖縣": { t: 42, l: 5 },
             "金門縣": { t: 15, l: 5 },
-            "連江縣": { t: 2, l: 30 }
+            "連江縣": { t: 2, l: 20 }
         };
 
         async function fetchWeather() {
@@ -260,8 +266,6 @@
 
         function renderMap() {
             board.innerHTML = '';
-            // 這裡不需要重設 class，因為 HTML 已經預設好 map-container 了
-
             citiesData.forEach((city, index) => {
                 const coords = coordinates[city.name] || { t: 50, l: 50 };
 
@@ -269,7 +273,6 @@
                 container.className = 'hole-container';
                 container.dataset.index = index;
                 
-                // 定位
                 container.style.top = coords.t + '%';
                 container.style.left = coords.l + '%';
 
@@ -285,7 +288,6 @@
                     <div class="city-label">${city.name}</div>
                 `;
 
-                // 點擊事件
                 container.addEventListener('click', (e) => {
                     e.stopPropagation();
                     whackMole(index);
@@ -298,19 +300,16 @@
         function whackMole(index) {
             clearTimeout(autoPlayTimeout);
             
-            // 1. 重置其他地鼠
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.mole').forEach(el => el.classList.remove('bonked'));
 
-            // 2. 觸發目標地鼠
             const targetContainer = board.children[index];
             const targetMole = targetContainer.querySelector('.mole');
 
             if (targetContainer) {
-                targetContainer.classList.add('active'); // 彈出
-                targetMole.classList.add('bonked');      // 變色+死掉
+                targetContainer.classList.add('active');
+                targetMole.classList.add('bonked');
                 
-                // 0.5秒後變回正常顏色 (但保持彈出狀態方便看字)
                 setTimeout(() => {
                     targetMole.classList.remove('bonked');
                 }, 500);
@@ -321,33 +320,24 @@
             const activeMoles = document.querySelectorAll('.hole-container.active');
             if (activeMoles.length > 0) {
                 activeMoles.forEach(el => el.classList.remove('active'));
-                
-                // 自動隨機出現下一隻
                 autoPlayTimeout = setTimeout(showRandomMole, 1000);
             }
         }
 
         function showRandomMole() {
             if (citiesData.length === 0) return;
-            
             const randomIdx = Math.floor(Math.random() * citiesData.length);
-            
-            // 先隱藏其他的
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
-            
-            // 隨機彈出 (不帶 bonked 紅色)
             const target = board.children[randomIdx];
             if(target) target.classList.add('active');
         }
 
-        // 點擊背景隱藏
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.hole-container')) {
                 hideAllMoles();
             }
         });
 
-        // 開始
         fetchWeather();
     </script>
 </body>
