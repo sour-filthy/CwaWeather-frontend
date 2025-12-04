@@ -9,7 +9,6 @@
 
     <style>
         :root {
-            --ground-color: #8da25d;
             --hole-color: #3e2723;
             --mole-color: #8d6e63;
             --mole-bonked: #e53935;
@@ -23,7 +22,7 @@
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
-            background-color: #87CEEB; /* 天空藍背景 */
+            background-color: #87CEEB; /* 天空藍 */
         }
 
         h1 {
@@ -39,40 +38,29 @@
         .map-container {
             position: relative;
             width: 95%;
-            max-width: 550px; /* 稍微縮窄一點，讓比例更像台灣 */
-            aspect-ratio: 0.7; /* 台灣的長寬比 */
+            max-width: 480px; /* 台灣形狀比較瘦長 */
+            height: 720px;    /* 固定高度確保比例 */
             margin-bottom: 50px;
         }
 
-        /* --- 🌟 修正：正確的台灣地圖背景 --- */
-        .map-container::before {
-            content: "";
+        /* --- 🌟 內嵌 SVG 地圖樣式 --- */
+        .taiwan-map {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            
-            /* 使用維基百科的 SVG 連結，這是最標準的台灣形狀 */
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/03/Taiwan_blank_map.svg');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            
-            /* 濾鏡魔法：
-               1. brightness(0): 把地圖變全黑
-               2. invert(1): 把全黑變全白
-               3. opacity(0.6): 變半透明
-               4. drop-shadow: 增加一點邊緣發光感
-            */
-            filter: brightness(0) invert(1) opacity(0.6) drop-shadow(0 0 2px rgba(255,255,255,0.5));
-            
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            fill: rgba(255, 255, 255, 0.5); /* 半透明白色 */
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); /* 發光邊緣 */
             z-index: 0;
-            pointer-events: none;
+            pointer-events: none; /* 讓點擊穿透 */
         }
 
-        /* --- 洞的位置 --- */
+        /* --- 洞 --- */
         .hole-container {
             position: absolute;
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             transform: translate(-50%, -50%);
             cursor: pointer;
             z-index: 1;
@@ -80,130 +68,99 @@
 
         .hole-container.active { z-index: 1000; }
 
-        /* --- 洞穴 --- */
         .hole {
             width: 100%;
-            height: 24px;
+            height: 18px;
             background: var(--hole-color);
             border-radius: 50%;
             position: absolute;
-            bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5) inset;
+            bottom: 12px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.5) inset;
             z-index: 1; 
         }
 
-        /* --- 城市標籤 --- */
         .city-label {
             position: absolute;
-            top: 10px;
+            top: 8px;
             width: 80px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
             color: #fff;
             font-weight: bold;
-            font-size: 13px;
-            text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000;
+            font-size: 12px;
+            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
             pointer-events: none;
             z-index: 3;
         }
 
         /* --- 地鼠 --- */
         .mole {
-            width: 44px;
-            height: 50px;
+            width: 36px;
+            height: 42px;
             background: var(--mole-color);
-            border-radius: 22px 22px 10px 10px;
+            border-radius: 18px 18px 8px 8px;
             position: absolute;
-            bottom: 25px;
+            bottom: 20px;
             left: 50%;
-            
             transform: translateX(-50%) scale(0.1);
             opacity: 0;
-            
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 2;
             display: flex;
             justify-content: center;
         }
 
-        /* 鼻子 */
-        .mole::before { 
-            content: ''; width: 14px; height: 10px; 
-            background: #d7ccc8;
-            border-radius: 50%; position: absolute; top: 22px;
+        .mole::before { /* 鼻子 */
+            content: ''; width: 12px; height: 8px; background: #d7ccc8;
+            border-radius: 50%; position: absolute; top: 18px;
         }
-        
-        /* 眼睛 (正常) */
-        .mole::after { 
-            content: ''; width: 5px; height: 5px; 
-            background: #333;
-            border-radius: 50%; position: absolute; top: 15px; left: 12px;
-            box-shadow: 14px 0 0 #333;
+        .mole::after { /* 眼睛 */
+            content: ''; width: 4px; height: 4px; background: #333;
+            border-radius: 50%; position: absolute; top: 14px; left: 10px;
+            box-shadow: 12px 0 0 #333;
         }
 
-        /* --- 被打到的狀態 --- */
-        .mole.bonked { 
-            background: var(--mole-bonked);
-        }
+        /* 被打到 */
+        .mole.bonked { background: var(--mole-bonked); }
         .mole.bonked::after {
-            content: 'x x';
-            background: transparent; box-shadow: none;
-            font-size: 14px; font-weight: bold; top: 12px; left: 50%;
-            transform: translateX(-50%);
-            color: #fff; letter-spacing: 2px;
+            content: 'x x'; background: transparent; box-shadow: none;
+            font-size: 12px; font-weight: bold; top: 12px; left: 50%;
+            transform: translateX(-50%); color: #fff; letter-spacing: 2px;
         }
 
-        /* 歪頭動畫 */
         .hole-container.active .mole.bonked {
             transform: translateX(-50%) rotate(25deg) translateY(5px);
             transition: transform 0.1s;
         }
 
-        /* --- 資訊牌 --- */
+        /* 資訊牌 */
         .mole-info {
-            background: white;
-            padding: 5px 8px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 12px;
-            border: 2px solid #333;
-            position: absolute;
-            top: -75px;
-            width: 90px;
-            left: 50%;
-            transform: translateX(-50%) scale(0.8);
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s;
+            background: white; padding: 4px 6px; border-radius: 6px;
+            text-align: center; font-size: 11px; border: 2px solid #333;
+            position: absolute; top: -65px; width: 85px; left: 50%;
+            transform: translateX(-50%) scale(0.8); opacity: 0;
+            pointer-events: none; transition: all 0.3s;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .mole-info strong { color: #d84315; font-size: 1.1em; display: block; margin-bottom: 2px;}
 
-        /* 彈出動畫 */
-        .hole-container.active .mole { 
-            transform: translateX(-50%) scale(1); 
-            opacity: 1;
-        }
-        .hole-container.active .mole-info { 
-            opacity: 1; 
-            transform: translateX(-50%) scale(1);
-        }
+        .hole-container.active .mole { transform: translateX(-50%) scale(1); opacity: 1; }
+        .hole-container.active .mole-info { opacity: 1; transform: translateX(-50%) scale(1); }
 
         #loading {
             color: white; font-size: 1.5em; text-shadow: 1px 1px 2px #333; position: absolute; top: 50%;
         }
 
-        /* --- 手機版 RWD --- */
+        /* 手機版 RWD */
         @media (max-width: 600px) {
-            .hole-container { width: 36px; height: 36px; }
-            .hole { height: 14px; bottom: 8px; }
+            .map-container { height: 500px; }
+            .hole-container { width: 30px; height: 30px; }
+            .hole { height: 10px; bottom: 8px; }
             .city-label { font-size: 10px; top: 4px; }
-            .mole { width: 28px; height: 34px; bottom: 14px; border-radius: 14px 14px 6px 6px; }
-            .mole::before { width: 8px; height: 6px; top: 14px; }
-            .mole::after { width: 3px; height: 3px; top: 10px; left: 8px; box-shadow: 9px 0 0 #333; }
-            .mole.bonked::after { font-size: 10px; top: 8px; letter-spacing: 1px; }
-            .mole-info { top: -60px; width: 75px; font-size: 10px; padding: 4px; }
+            .mole { width: 24px; height: 30px; bottom: 12px; }
+            .mole::before { width: 8px; height: 6px; top: 12px; }
+            .mole::after { width: 3px; height: 3px; top: 10px; left: 6px; box-shadow: 9px 0 0 #333; }
         }
     </style>
 </head>
@@ -211,10 +168,18 @@
 
     <h1>🌧️ Weather Whack-a-Mole 🌤️</h1>
     <div id="loading">Scouting for moles...</div>
-    <div id="game-board" class="map-container"></div>
+    
+    <div id="game-board" class="map-container">
+        <svg class="taiwan-map" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+            <path d="M190,20 C220,10 280,40 310,100 C330,140 330,220 310,300 C290,400 240,500 200,560 C170,580 140,550 130,520 C100,450 80,350 90,250 C100,150 140,50 190,20 Z" />
+            <path d="M60,350 Q70,340 80,350 Q70,370 60,360 Z" />
+            <path d="M20,200 Q40,190 30,210 Z" />
+            <path d="M50,80 Q60,70 55,90 Z" />
+        </svg>
+    </div>
 
     <script>
-        // ⚠️ 請確認這是你的 Zeabur URL
+        // ⚠️ 確認 Zeabur 網址
         const API_URL = 'https://hex-final.zeabur.app/api/weather'; 
         
         const board = document.getElementById('game-board');
@@ -222,30 +187,30 @@
         let citiesData = [];
         let autoPlayTimeout = null;
 
-        // 🗺️ 台灣地圖座標微調 (針對新的 SVG 圖片)
+        // 🗺️ 針對這張手繪 SVG 校正的座標
         const coordinates = {
-            "基隆市": { t: 3, l: 75 },
-            "臺北市": { t: 6, l: 70 },
-            "新北市": { t: 10, l: 72 },
-            "桃園市": { t: 8, l: 58 },
-            "新竹市": { t: 14, l: 52 },
-            "新竹縣": { t: 16, l: 60 },
-            "苗栗縣": { t: 20, l: 48 },
-            "臺中市": { t: 30, l: 42 },
-            "彰化縣": { t: 36, l: 35 },
-            "南投縣": { t: 38, l: 55 },
-            "雲林縣": { t: 45, l: 32 },
-            "嘉義市": { t: 51, l: 36 },
-            "嘉義縣": { t: 52, l: 42 },
-            "臺南市": { t: 62, l: 30 },
-            "高雄市": { t: 72, l: 35 },
-            "屏東縣": { t: 82, l: 45 },
-            "宜蘭縣": { t: 18, l: 82 },
-            "花蓮縣": { t: 40, l: 78 },
-            "臺東縣": { t: 72, l: 65 },
-            "澎湖縣": { t: 42, l: 5 },
-            "金門縣": { t: 15, l: 5 },
-            "連江縣": { t: 2, l: 20 }
+            "基隆市": { t: 8, l: 65 },
+            "臺北市": { t: 12, l: 60 },
+            "新北市": { t: 16, l: 65 },
+            "桃園市": { t: 15, l: 50 },
+            "新竹市": { t: 22, l: 45 },
+            "新竹縣": { t: 24, l: 52 },
+            "苗栗縣": { t: 30, l: 42 },
+            "臺中市": { t: 40, l: 38 },
+            "彰化縣": { t: 48, l: 32 },
+            "南投縣": { t: 50, l: 50 },
+            "雲林縣": { t: 58, l: 30 },
+            "嘉義市": { t: 65, l: 32 },
+            "嘉義縣": { t: 65, l: 40 },
+            "臺南市": { t: 75, l: 28 },
+            "高雄市": { t: 82, l: 32 },
+            "屏東縣": { t: 90, l: 45 },
+            "宜蘭縣": { t: 25, l: 75 },
+            "花蓮縣": { t: 45, l: 70 },
+            "臺東縣": { t: 75, l: 60 },
+            "澎湖縣": { t: 50, l: 12 },
+            "金門縣": { t: 28, l: 5 },
+            "連江縣": { t: 10, l: 10 }
         };
 
         async function fetchWeather() {
@@ -265,7 +230,11 @@
         }
 
         function renderMap() {
-            board.innerHTML = '';
+            // 注意：這裡不清空 innerHTML，否則會把 SVG 刪掉
+            // 我們只清除舊的洞 (如果有 class="hole-container")
+            const oldHoles = board.querySelectorAll('.hole-container');
+            oldHoles.forEach(h => h.remove());
+
             citiesData.forEach((city, index) => {
                 const coords = coordinates[city.name] || { t: 50, l: 50 };
 
@@ -299,17 +268,19 @@
 
         function whackMole(index) {
             clearTimeout(autoPlayTimeout);
-            
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.mole').forEach(el => el.classList.remove('bonked'));
 
-            const targetContainer = board.children[index];
-            const targetMole = targetContainer.querySelector('.mole');
+            const targetContainer = board.children[index]; // 這裡要注意 index 對應問題
+            // 因為 SVG 是第一個 child，所以 hole-container 從 index+1 開始
+            // 更安全的寫法是用 dataset 抓取
+            const allHoles = document.querySelectorAll('.hole-container');
+            const target = Array.from(allHoles).find(h => h.dataset.index == index);
 
-            if (targetContainer) {
-                targetContainer.classList.add('active');
+            if (target) {
+                const targetMole = target.querySelector('.mole');
+                target.classList.add('active');
                 targetMole.classList.add('bonked');
-                
                 setTimeout(() => {
                     targetMole.classList.remove('bonked');
                 }, 500);
@@ -327,8 +298,12 @@
         function showRandomMole() {
             if (citiesData.length === 0) return;
             const randomIdx = Math.floor(Math.random() * citiesData.length);
+            
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
-            const target = board.children[randomIdx];
+            
+            const allHoles = document.querySelectorAll('.hole-container');
+            const target = Array.from(allHoles).find(h => h.dataset.index == randomIdx);
+            
             if(target) target.classList.add('active');
         }
 
