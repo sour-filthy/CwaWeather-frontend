@@ -29,10 +29,11 @@
             text-shadow: 2px 2px 0 #333;
             margin-top: 15px;
             margin-bottom: 5px;
-            z-index: 10;
+            z-index: 20; /* 提高層級，避免被地圖蓋住 */
             text-align: center;
             font-size: 1.8rem;
             font-weight: bold;
+            position: relative;
         }
 
         .subtitle {
@@ -41,18 +42,25 @@
             font-weight: bold;
             font-size: 1.2rem;
             margin-bottom: 10px;
-            z-index: 10;
+            z-index: 20; /* 提高層級 */
             text-align: center;
             letter-spacing: 1px;
+            position: relative;
         }
 
         /* --- 地圖容器 --- */
         .map-container {
             position: relative;
-            width: 95%;
-            max-width: 600px;
-            height: 650px; 
-            margin: 0 auto 50px auto; /* 水平置中 */
+            /* 1. 地圖放大：寬度改為 900px (約原來的1.5倍) */
+            width: 100%;
+            max-width: 900px; 
+            height: 950px; /* 高度配合拉長 */
+            
+            /* 3. 大幅縮短間距：用負 margin 往上拉 */
+            margin: -100px auto 20px auto; 
+
+            /* 2. 地圖左移：用 transform 把整個容器往左平移，讓台灣本島視覺置中 */
+            transform: translateX(-8%);
         }
 
         /* --- SVG 地圖樣式 --- */
@@ -94,11 +102,22 @@
             box-shadow: 0 3px 5px rgba(0,0,0,0.5) inset; z-index: 1; 
         }
 
+        /* 5. 縣市名稱下移：從 top 改為 bottom */
         .city-label {
-            position: absolute; top: 6px; width: 80px; left: 50%;
-            transform: translateX(-50%); text-align: center; color: #fff;
-            font-weight: bold; font-size: 12px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
-            pointer-events: none; z-index: 3;
+            position: absolute; 
+            top: auto;        /* 取消頂部定位 */
+            bottom: -20px;    /* 移到洞的下方 */
+            width: 100px; 
+            left: 50%;
+            transform: translateX(-50%); 
+            text-align: center; 
+            color: #fff;
+            font-weight: bold; 
+            font-size: 13px;  /* 稍微加大字體因為地圖變大了 */
+            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+            pointer-events: none; 
+            z-index: 3;
+            white-space: nowrap;
         }
 
         .mole {
@@ -131,12 +150,22 @@
         .hole-container.active .mole { transform: translateX(-50%) scale(1); opacity: 1; }
         .hole-container.active .mole-info { opacity: 1; transform: translateX(-50%) scale(1); }
 
-        #loading { color: white; font-size: 1.5em; text-shadow: 1px 1px 2px #333; position: absolute; top: 50%; }
+        /* 4. 修改 Loading 樣式：跟 Subtitle 一致 */
+        #loading { 
+            color: #fff;
+            text-shadow: 2px 2px 0 #333;
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            position: absolute; 
+            top: 50%; 
+            z-index: 50;
+        }
 
         @media (max-width: 600px) {
             .hole-container { width: 30px; height: 30px; }
             .hole { height: 10px; bottom: 8px; }
-            .city-label { font-size: 10px; top: 4px; }
+            .city-label { font-size: 10px; bottom: -15px; } /* 手機版也要調整 label 位置 */
             .mole { width: 24px; height: 30px; bottom: 12px; }
             .mole::before { width: 8px; height: 6px; top: 12px; }
             .mole::after { width: 3px; height: 3px; top: 10px; left: 6px; box-shadow: 9px 0 0 #333; }
@@ -148,7 +177,7 @@
     <h1>🌧️ Weather Whack-a-Mole 🌤️</h1>
     <div class="subtitle">請點選所在城市</div>
     
-    <div id="loading">Scouting for moles...</div>
+    <div id="loading">尋找地鼠中...</div>
     
     <div id="game-board" class="map-container">
         </div>
@@ -174,7 +203,7 @@
             "Kaohsiung City": "高雄市",
             "Keelung City": "基隆市",
             "Hsinchu City": "新竹市",
-            "Hsinchu": "新竹縣",      // 你的 json 裡縣市是分開的
+            "Hsinchu": "新竹縣",      
             "Miaoli": "苗栗縣",
             "Changhua": "彰化縣",
             "Nantou": "南投縣",
