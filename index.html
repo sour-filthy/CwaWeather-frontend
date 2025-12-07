@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taiwan Weather Whack-a-Mole</title>
-    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
 
     <style>
@@ -22,7 +21,7 @@
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
-            background-color: #87CEEB; /* 天空藍 */
+            background-color: #87CEEB;
         }
 
         h1 {
@@ -36,38 +35,50 @@
             font-weight: bold;
         }
 
+        .subtitle {
+            color: #fff;
+            text-shadow: 2px 2px 0 #333;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            z-index: 10;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
         /* --- 地圖容器 --- */
         .map-container {
             position: relative;
-            width: 90%;
-            max-width: 450px; /* 寬度限制 */
-            aspect-ratio: 0.6; /* 台灣長寬比約 0.6 */
+            width: 95%;
+            max-width: 600px;
+            /* 高度會由 JS 動態調整，這裡設一個最小高度 */
+            min-height: 600px; 
             margin-bottom: 50px;
-            /* 暫時加個邊框方便你確認容器位置 (之後可拿掉) */
-            /* border: 1px dashed rgba(255,255,255,0.3); */
         }
 
-        /* --- 🌟 內嵌 SVG 地圖 --- */
-        .taiwan-map-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* --- SVG 地圖樣式 --- */
+        svg {
             width: 100%;
             height: 100%;
-            z-index: 0;
-            overflow: visible; /* 允許稍微超出 */
-            pointer-events: none; /* 讓點擊穿透 */
+            overflow: visible;
         }
 
-        /* 地圖本體的樣式 */
         .map-path {
-            fill: rgba(255, 255, 255, 0.4); /* 半透明白色填充 */
-            stroke: rgba(255, 255, 255, 0.8); /* 白色邊框 */
-            stroke-width: 1;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3)); /* 發光效果 */
+            fill: rgba(255, 255, 255, 0.4);
+            stroke: rgba(255, 255, 255, 0.9);
+            stroke-width: 1px;
+            /* vector-effect 讓邊框在縮放時保持細緻，不會變粗 */
+            vector-effect: non-scaling-stroke; 
+            transition: fill 0.3s;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+        }
+        
+        /* 增加一個 hover 效果讓地圖更有互動感 */
+        .map-path:hover {
+            fill: rgba(255, 255, 255, 0.6);
         }
 
-        /* --- 洞 --- */
+        /* --- 洞與地鼠樣式 (保持不變) --- */
         .hole-container {
             position: absolute;
             width: 50px;
@@ -76,76 +87,39 @@
             cursor: pointer;
             z-index: 1;
         }
-
         .hole-container.active { z-index: 1000; }
 
         .hole {
-            width: 100%;
-            height: 16px;
-            background: var(--hole-color);
-            border-radius: 50%;
-            position: absolute;
-            bottom: 12px;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.5) inset;
-            z-index: 1; 
+            width: 100%; height: 16px; background: var(--hole-color);
+            border-radius: 50%; position: absolute; bottom: 12px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.5) inset; z-index: 1; 
         }
 
         .city-label {
-            position: absolute;
-            top: 6px;
-            width: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            color: #fff;
-            font-weight: bold;
-            font-size: 12px;
-            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
-            pointer-events: none;
-            z-index: 3;
+            position: absolute; top: 6px; width: 80px; left: 50%;
+            transform: translateX(-50%); text-align: center; color: #fff;
+            font-weight: bold; font-size: 12px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+            pointer-events: none; z-index: 3;
         }
 
-        /* --- 地鼠 --- */
         .mole {
-            width: 36px;
-            height: 42px;
-            background: var(--mole-color);
-            border-radius: 18px 18px 8px 8px;
-            position: absolute;
-            bottom: 18px;
-            left: 50%;
-            transform: translateX(-50%) scale(0.1);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 2;
-            display: flex;
-            justify-content: center;
+            width: 36px; height: 42px; background: var(--mole-color);
+            border-radius: 18px 18px 8px 8px; position: absolute;
+            bottom: 18px; left: 50%; transform: translateX(-50%) scale(0.1);
+            opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2; display: flex; justify-content: center;
         }
-
-        .mole::before { /* 鼻子 */
-            content: ''; width: 12px; height: 8px; background: #d7ccc8;
-            border-radius: 50%; position: absolute; top: 18px;
-        }
-        .mole::after { /* 眼睛 */
-            content: ''; width: 4px; height: 4px; background: #333;
-            border-radius: 50%; position: absolute; top: 14px; left: 10px;
-            box-shadow: 12px 0 0 #333;
-        }
-
-        /* 被打到 */
+        .mole::before { content: ''; width: 12px; height: 8px; background: #d7ccc8; border-radius: 50%; position: absolute; top: 18px; }
+        .mole::after { content: ''; width: 4px; height: 4px; background: #333; border-radius: 50%; position: absolute; top: 14px; left: 10px; box-shadow: 12px 0 0 #333; }
+        
         .mole.bonked { background: var(--mole-bonked); }
         .mole.bonked::after {
             content: 'x x'; background: transparent; box-shadow: none;
             font-size: 12px; font-weight: bold; top: 12px; left: 50%;
             transform: translateX(-50%); color: #fff; letter-spacing: 2px;
         }
+        .hole-container.active .mole.bonked { transform: translateX(-50%) rotate(25deg) translateY(5px); transition: transform 0.1s; }
 
-        .hole-container.active .mole.bonked {
-            transform: translateX(-50%) rotate(25deg) translateY(5px);
-            transition: transform 0.1s;
-        }
-
-        /* 資訊牌 */
         .mole-info {
             background: white; padding: 4px 6px; border-radius: 6px;
             text-align: center; font-size: 11px; border: 2px solid #333;
@@ -155,17 +129,12 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .mole-info strong { color: #d84315; font-size: 1.1em; display: block; margin-bottom: 2px;}
-
         .hole-container.active .mole { transform: translateX(-50%) scale(1); opacity: 1; }
         .hole-container.active .mole-info { opacity: 1; transform: translateX(-50%) scale(1); }
 
-        #loading {
-            color: white; font-size: 1.5em; text-shadow: 1px 1px 2px #333; position: absolute; top: 50%;
-        }
+        #loading { color: white; font-size: 1.5em; text-shadow: 1px 1px 2px #333; position: absolute; top: 50%; }
 
-        /* 手機版 RWD */
         @media (max-width: 600px) {
-            .map-container { max-width: 90%; }
             .hole-container { width: 30px; height: 30px; }
             .hole { height: 10px; bottom: 8px; }
             .city-label { font-size: 10px; top: 4px; }
@@ -179,20 +148,11 @@
 
     <h1>🌧️ Weather Whack-a-Mole 🌤️</h1>
     <div class="subtitle">請點選所在城市</div>
-    <div id="loading">尋找地鼠中...</div>
+    
+    <div id="loading">Scouting for moles...</div>
     
     <div id="game-board" class="map-container">
-        <svg class="taiwan-map-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path class="map-path" d="M50,2 
-                     C60,10 80,20 85,40 
-                     C88,60 70,90 50,98 
-                     C30,90 15,65 18,40 
-                     C20,25 40,10 50,2 Z" />
-            
-            <circle class="map-path" cx="15" cy="45" r="3" />
-            <circle class="map-path" cx="8" cy="20" r="2" />
-        </svg>
-    </div>
+        </div>
 
     <script>
         // ⚠️ 確認 Zeabur 網址
@@ -200,87 +160,180 @@
         
         const board = document.getElementById('game-board');
         const loading = document.getElementById('loading');
+        
         let citiesData = [];
+        let geoData = null;
         let autoPlayTimeout = null;
+        let pathElements = {}; // 儲存地圖路徑元素以便後續操作
 
-        // 🗺️ 針對這張手繪地圖 (0-100) 校正的座標
-        const coordinates = {
-            "基隆市": { t: 8, l: 65 },
-            "臺北市": { t: 12, l: 60 },
-            "新北市": { t: 16, l: 65 },
-            "桃園市": { t: 15, l: 45 },
-            "新竹市": { t: 22, l: 40 },
-            "新竹縣": { t: 24, l: 48 },
-            "苗栗縣": { t: 30, l: 40 },
-            "臺中市": { t: 40, l: 35 },
-            "彰化縣": { t: 48, l: 30 },
-            "南投縣": { t: 50, l: 50 },
-            "雲林縣": { t: 58, l: 28 },
-            "嘉義市": { t: 64, l: 30 },
-            "嘉義縣": { t: 65, l: 38 },
-            "臺南市": { t: 75, l: 25 },
-            "高雄市": { t: 82, l: 30 },
-            "屏東縣": { t: 90, l: 45 },
-            "宜蘭縣": { t: 25, l: 75 },
-            "花蓮縣": { t: 45, l: 70 },
-            "臺東縣": { t: 75, l: 60 },
-            "澎湖縣": { t: 48, l: 15 },
-            "金門縣": { t: 20, l: 8 },
-            "連江縣": { t: 5, l: 20 }
-        };
-
-        async function fetchWeather() {
+        // 1. 初始化：同時載入天氣資料和地圖資料
+        async function init() {
             try {
-                const res = await fetch(API_URL);
-                const data = await res.json();
-                
-                if (data.success) {
-                    citiesData = data.data;
-                    renderMap();
+                // 平行載入兩份資料，加快速度
+                const [weatherRes, mapRes] = await Promise.all([
+                    fetch(API_URL),
+                    fetch('tw.json') // 讀取你放在 public 資料夾的檔案
+                ]);
+
+                const weatherJson = await weatherRes.json();
+                geoData = await mapRes.json();
+
+                if (weatherJson.success) {
+                    citiesData = weatherJson.data;
+                    drawMapSystem(); // 啟動繪圖系統
                     loading.style.display = 'none';
                 }
             } catch (err) {
-                loading.innerText = "Error loading weather. Check backend!";
+                loading.innerText = "Error: 無法載入資料，請確認 tw.json 是否在 public 資料夾";
                 console.error(err);
             }
         }
 
-        function renderMap() {
-            // 清除舊的洞，但保留 SVG 地圖
-            const oldHoles = board.querySelectorAll('.hole-container');
-            oldHoles.forEach(h => h.remove());
+        // 2. 繪圖系統核心
+        function drawMapSystem() {
+            board.innerHTML = ''; // 清空畫布
 
-            citiesData.forEach((city, index) => {
-                const coords = coordinates[city.name] || { t: 50, l: 50 };
+            // --- A. 計算地圖邊界 (Bounding Box) ---
+            // 為了把地圖完美塞進畫布，我們需要知道最東南西北的座標
+            let bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+            
+            geoData.features.forEach(feature => {
+                // 處理不同類型的幾何形狀 (Polygon 和 MultiPolygon)
+                const geometry = feature.geometry;
+                const coords = geometry.type === 'MultiPolygon' 
+                    ? geometry.coordinates.flat(1) 
+                    : geometry.coordinates;
 
-                const container = document.createElement('div');
-                container.className = 'hole-container';
-                container.dataset.index = index;
-                
-                container.style.top = coords.t + '%';
-                container.style.left = coords.l + '%';
-
-                container.innerHTML = `
-                    <div class="mole" id="mole-${index}">
-                        <div class="mole-info">
-                            <strong>${city.minTemp}-${city.maxTemp}</strong>
-                            <div>${city.condition}</div>
-                            <div>☔ ${parseInt(city.pop)}%</div>
-                        </div>
-                    </div>
-                    <div class="hole"></div>
-                    <div class="city-label">${city.name}</div>
-                `;
-
-                container.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    whackMole(index);
+                coords.forEach(ring => {
+                    ring.forEach(([x, y]) => {
+                        if (x < bounds.minX) bounds.minX = x;
+                        if (x > bounds.maxX) bounds.maxX = x;
+                        if (y < bounds.minY) bounds.minY = y;
+                        if (y > bounds.maxY) bounds.maxY = y;
+                    });
                 });
+            });
 
-                board.appendChild(container);
+            // --- B. 建立 SVG ---
+            // 使用 viewBox 讓 SVG 自動縮放
+            // 為了讓地圖不要貼邊，我們留一點 padding (邊距)
+            const padding = 0.2; // 經緯度單位的留白
+            const viewBox = `${bounds.minX - padding} ${bounds.minY - padding} ${bounds.maxX - bounds.minX + padding*2} ${bounds.maxY - bounds.minY + padding*2}`;
+            
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            // 注意：SVG 的 Y 軸是向下的，但經緯度的 Y (緯度) 是向上的
+            // 這裡我們用 CSS transform 或者在 path生成時翻轉，最簡單是用 scale(1, -1)
+            svg.setAttribute("viewBox", viewBox);
+            svg.style.transform = "scaleY(-1)"; // 翻轉 Y 軸讓地圖轉正
+            board.appendChild(svg);
+
+            // --- C. 繪製每一個縣市 ---
+            geoData.features.forEach(feature => {
+                const pathData = generatePath(feature.geometry);
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("class", "map-path");
+                
+                // 嘗試從屬性中抓取縣市名稱 (相容常見格式)
+                const props = feature.properties;
+                const name = props.COUNTYNAME || props.name || props.Name || props.C_Name || "";
+                
+                path.id = `map-${name}`; // 給個 ID 方便除錯
+                svg.appendChild(path);
+
+                // --- D. 自動計算地鼠洞位置 (重心 Centroid) ---
+                if (name) {
+                    const center = calculateCentroid(feature.geometry);
+                    // 因為我們翻轉了 SVG，但 HTML 的 div 沒翻轉，所以要計算 HTML 的 % 位置
+                    // 這有點複雜，所以我們用一個更聰明的方法：
+                    // 直接把地鼠洞放進地圖座標系？不行，因為地鼠包含 HTML 文字。
+                    // 我們改用計算相對於 bounds 的百分比。
+                    
+                    createHoleAt(name, center, bounds);
+                }
             });
         }
 
+        // 輔助：生成 SVG Path 字串
+        function generatePath(geometry) {
+            let d = "";
+            const coords = geometry.type === 'MultiPolygon' ? geometry.coordinates : [geometry.coordinates];
+            
+            coords.forEach(poly => {
+                poly.forEach(ring => {
+                    d += "M";
+                    ring.forEach(([x, y]) => d += `${x},${y} `);
+                    d += "Z ";
+                });
+            });
+            return d;
+        }
+
+        // 輔助：計算幾何中心 (粗略算法，取所有點的平均值)
+        function calculateCentroid(geometry) {
+            let totalX = 0, totalY = 0, count = 0;
+            const coords = geometry.type === 'MultiPolygon' ? geometry.coordinates.flat(2) : geometry.coordinates.flat(1);
+            
+            coords.forEach(([x, y]) => {
+                totalX += x;
+                totalY += y;
+                count++;
+            });
+            return { x: totalX / count, y: totalY / count };
+        }
+
+        // 輔助：在特定座標創造地鼠洞
+        function createHoleAt(cityName, center, bounds) {
+            // 1. 找到對應的天氣資料
+            // 有時候 geojson 的名字 (臺北市) 跟 API 的名字 (臺北市) 可能會差一個字 (台/臺)
+            // 這裡做個簡單的模糊比對
+            const weatherCity = citiesData.find(c => 
+                c.name === cityName || 
+                c.name.replace('臺', '台') === cityName.replace('臺', '台')
+            );
+            
+            if (!weatherCity) return; // 如果這個地圖區塊沒有天氣資料就不挖洞
+
+            // 2. 將經緯度轉換為容器的百分比座標 (Top/Left)
+            // 寬度範圍
+            const rangeX = (bounds.maxX + 0.2) - (bounds.minX - 0.2); // 加上 padding
+            const rangeY = (bounds.maxY + 0.2) - (bounds.minY - 0.2);
+            
+            // 計算百分比
+            const leftPct = ((center.x - (bounds.minX - 0.2)) / rangeX) * 100;
+            const topPct = 100 - ((center.y - (bounds.minY - 0.2)) / rangeY) * 100; // Y軸反轉
+
+            // 3. 建立 DOM
+            const container = document.createElement('div');
+            container.className = 'hole-container';
+            container.style.left = `${leftPct}%`;
+            container.style.top = `${topPct}%`;
+            
+            // 綁定資料
+            const index = citiesData.indexOf(weatherCity);
+            container.dataset.index = index;
+
+            container.innerHTML = `
+                <div class="mole" id="mole-${index}">
+                    <div class="mole-info">
+                        <strong>${weatherCity.minTemp}-${weatherCity.maxTemp}</strong>
+                        <div>${weatherCity.condition}</div>
+                        <div>☔ ${parseInt(weatherCity.pop)}%</div>
+                    </div>
+                </div>
+                <div class="hole"></div>
+                <div class="city-label">${weatherCity.name}</div>
+            `;
+
+            container.addEventListener('click', (e) => {
+                e.stopPropagation();
+                whackMole(index);
+            });
+
+            board.appendChild(container);
+        }
+
+        // 遊戲邏輯 (保持不變)
         function whackMole(index) {
             clearTimeout(autoPlayTimeout);
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
@@ -313,7 +366,6 @@
             const randomIdx = Math.floor(Math.random() * citiesData.length);
             
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
-            
             const allHoles = document.querySelectorAll('.hole-container');
             const target = Array.from(allHoles).find(h => h.dataset.index == randomIdx);
             
@@ -326,7 +378,8 @@
             }
         });
 
-        fetchWeather();
+        // 啟動
+        init();
     </script>
 </body>
 </html>
