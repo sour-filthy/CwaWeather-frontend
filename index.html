@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taiwan Weather Whack-a-Mole (Debug Mode)</title>
+    <title>Taiwan Weather Whack-a-Mole</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
 
     <style>
@@ -24,62 +24,134 @@
             background-color: #87CEEB;
         }
 
-        h1 { color: #fff; text-shadow: 2px 2px 0 #333; margin-top: 15px; margin-bottom: 5px; z-index: 10; text-align: center; font-size: 1.8rem; font-weight: bold; }
-        .subtitle { color: #fff; text-shadow: 2px 2px 0 #333; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; z-index: 10; text-align: center; letter-spacing: 1px; }
+        h1 {
+            color: #fff;
+            text-shadow: 2px 2px 0 #333;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            z-index: 10;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
 
-        /* --- 偵錯模式：強制顯示邊框 --- */
+        .subtitle {
+            color: #fff;
+            text-shadow: 2px 2px 0 #333;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            z-index: 10;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        /* --- 地圖容器 --- */
         .map-container {
             position: relative;
             width: 95%;
             max-width: 600px;
             height: 650px; 
-            margin: 0 auto 50px auto;
-            border: 2px solid red; /* 🔴 紅框：容器範圍 */
-            background: rgba(255, 255, 255, 0.1);
+            margin: 0 auto 50px auto; /* 水平置中 */
         }
 
+        /* --- SVG 地圖樣式 --- */
         svg {
             width: 100%;
             height: 100%;
             overflow: visible;
             display: block;
             margin: 0 auto;
-            border: 2px dashed green; /* 🟢 綠框：SVG 畫布範圍 */
         }
 
         .map-path {
-            fill: rgba(255, 255, 255, 0.5);
-            stroke: #000; /* ⚫️ 黑線：地圖輪廓 (偵錯用) */
-            stroke-width: 1px;
+            fill: rgba(255, 255, 255, 0.4);
+            stroke: rgba(255, 255, 255, 0.9);
+            stroke-width: 0.5px;
             vector-effect: non-scaling-stroke; 
+            transition: fill 0.3s;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+        }
+        
+        .map-path:hover {
+            fill: rgba(255, 255, 255, 0.6);
         }
 
-        /* 洞與地鼠樣式 */
-        .hole-container { position: absolute; width: 50px; height: 50px; transform: translate(-50%, -50%); cursor: pointer; z-index: 1; border: 1px solid yellow; /* 🟡 黃框：地鼠洞位置 */ }
+        /* --- 洞與地鼠樣式 --- */
+        .hole-container {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 1;
+        }
         .hole-container.active { z-index: 1000; }
-        .hole { width: 100%; height: 16px; background: var(--hole-color); border-radius: 50%; position: absolute; bottom: 12px; box-shadow: 0 3px 5px rgba(0,0,0,0.5) inset; z-index: 1; }
-        .city-label { position: absolute; top: 6px; width: 80px; left: 50%; transform: translateX(-50%); text-align: center; color: #fff; font-weight: bold; font-size: 12px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000; pointer-events: none; z-index: 3; }
-        .mole { width: 36px; height: 42px; background: var(--mole-color); border-radius: 18px 18px 8px 8px; position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%) scale(0.1); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2; display: flex; justify-content: center; }
+
+        .hole {
+            width: 100%; height: 16px; background: var(--hole-color);
+            border-radius: 50%; position: absolute; bottom: 12px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.5) inset; z-index: 1; 
+        }
+
+        .city-label {
+            position: absolute; top: 6px; width: 80px; left: 50%;
+            transform: translateX(-50%); text-align: center; color: #fff;
+            font-weight: bold; font-size: 12px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+            pointer-events: none; z-index: 3;
+        }
+
+        .mole {
+            width: 36px; height: 42px; background: var(--mole-color);
+            border-radius: 18px 18px 8px 8px; position: absolute;
+            bottom: 18px; left: 50%; transform: translateX(-50%) scale(0.1);
+            opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2; display: flex; justify-content: center;
+        }
         .mole::before { content: ''; width: 12px; height: 8px; background: #d7ccc8; border-radius: 50%; position: absolute; top: 18px; }
         .mole::after { content: ''; width: 4px; height: 4px; background: #333; border-radius: 50%; position: absolute; top: 14px; left: 10px; box-shadow: 12px 0 0 #333; }
+        
         .mole.bonked { background: var(--mole-bonked); }
-        .mole.bonked::after { content: 'x x'; background: transparent; box-shadow: none; font-size: 12px; font-weight: bold; top: 12px; left: 50%; transform: translateX(-50%); color: #fff; letter-spacing: 2px; }
+        .mole.bonked::after {
+            content: 'x x'; background: transparent; box-shadow: none;
+            font-size: 12px; font-weight: bold; top: 12px; left: 50%;
+            transform: translateX(-50%); color: #fff; letter-spacing: 2px;
+        }
         .hole-container.active .mole.bonked { transform: translateX(-50%) rotate(25deg) translateY(5px); transition: transform 0.1s; }
-        .mole-info { background: white; padding: 4px 6px; border-radius: 6px; text-align: center; font-size: 11px; border: 2px solid #333; position: absolute; top: -65px; width: 85px; left: 50%; transform: translateX(-50%) scale(0.8); opacity: 0; pointer-events: none; transition: all 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+
+        .mole-info {
+            background: white; padding: 4px 6px; border-radius: 6px;
+            text-align: center; font-size: 11px; border: 2px solid #333;
+            position: absolute; top: -65px; width: 85px; left: 50%;
+            transform: translateX(-50%) scale(0.8); opacity: 0;
+            pointer-events: none; transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
         .mole-info strong { color: #d84315; font-size: 1.1em; display: block; margin-bottom: 2px;}
         .hole-container.active .mole { transform: translateX(-50%) scale(1); opacity: 1; }
         .hole-container.active .mole-info { opacity: 1; transform: translateX(-50%) scale(1); }
-        #loading { color: white; font-size: 1.5em; text-shadow: 1px 1px 2px #333; position: absolute; top: 50%; z-index: 100;}
+
+        #loading { color: white; font-size: 1.5em; text-shadow: 1px 1px 2px #333; position: absolute; top: 50%; }
+
+        @media (max-width: 600px) {
+            .hole-container { width: 30px; height: 30px; }
+            .hole { height: 10px; bottom: 8px; }
+            .city-label { font-size: 10px; top: 4px; }
+            .mole { width: 24px; height: 30px; bottom: 12px; }
+            .mole::before { width: 8px; height: 6px; top: 12px; }
+            .mole::after { width: 3px; height: 3px; top: 10px; left: 6px; box-shadow: 9px 0 0 #333; }
+        }
     </style>
 </head>
 <body>
 
-    <h1>🌧️ Debug Mode 🌤️</h1>
-    <div class="subtitle">請檢查 Console (F12)</div>
+    <h1>🌧️ Weather Whack-a-Mole 🌤️</h1>
+    <div class="subtitle">請點選所在城市</div>
     
-    <div id="loading">載入中...</div>
+    <div id="loading">Scouting for moles...</div>
     
-    <div id="game-board" class="map-container"></div>
+    <div id="game-board" class="map-container">
+        </div>
 
     <script>
         // ⚠️ 確認 Zeabur 後端網址
@@ -92,64 +164,67 @@
         let geoData = null;
         let autoPlayTimeout = null;
 
+        // 🌟 關鍵翻譯字典：把 tw.json 的英文名對應到 CWA 的中文名
+        const nameTranslation = {
+            "Taipei City": "臺北市",
+            "New Taipei City": "新北市",
+            "Taoyuan": "桃園市",
+            "Taichung City": "臺中市",
+            "Tainan City": "臺南市",
+            "Kaohsiung City": "高雄市",
+            "Keelung City": "基隆市",
+            "Hsinchu City": "新竹市",
+            "Hsinchu": "新竹縣",      // 你的 json 裡縣市是分開的
+            "Miaoli": "苗栗縣",
+            "Changhua": "彰化縣",
+            "Nantou": "南投縣",
+            "Yunlin": "雲林縣",
+            "Chiayi City": "嘉義市",
+            "Chiayi": "嘉義縣",
+            "Pingtung": "屏東縣",
+            "Yilan": "宜蘭縣",
+            "Hualien": "花蓮縣",
+            "Taitung": "臺東縣",
+            "Penghu": "澎湖縣",
+            "Kinmen": "金門縣",
+            "Matsu Islands": "連江縣"
+        };
+
         async function init() {
-            console.log("🚀 開始初始化...");
             try {
-                // 1. 載入天氣
-                console.log("📡 正在抓取天氣資料...");
-                const weatherRes = await fetch(API_URL);
+                const [weatherRes, mapRes] = await Promise.all([
+                    fetch(API_URL),
+                    fetch('tw.json')
+                ]);
+
                 const weatherJson = await weatherRes.json();
-                console.log("✅ 天氣資料狀態:", weatherJson.success ? "成功" : "失敗", weatherJson);
-
-                // 2. 載入地圖
-                console.log("🗺️ 正在讀取 tw.json...");
-                const mapRes = await fetch('tw.json');
-                console.log("📄 tw.json HTTP 狀態:", mapRes.status);
-                
-                if (!mapRes.ok) {
-                    throw new Error(`找不到 tw.json (Status: ${mapRes.status})`);
-                }
-
                 geoData = await mapRes.json();
-                console.log("✅ 地圖資料讀取成功，Feature 數量:", geoData.features ? geoData.features.length : 0);
 
                 if (weatherJson.success) {
                     citiesData = weatherJson.data;
                     drawMapSystem();
                     loading.style.display = 'none';
-                } else {
-                    loading.innerText = "天氣資料抓取失敗";
                 }
             } catch (err) {
-                loading.innerText = "❌ 發生錯誤: " + err.message;
-                console.error("❌ 初始化錯誤:", err);
+                loading.innerText = "Error: 資料載入失敗";
+                console.error(err);
             }
         }
 
         function drawMapSystem() {
-            console.log("🎨 開始繪製地圖...");
             board.innerHTML = ''; 
 
-            // --- A. 計算邊界 ---
+            // 計算邊界
             let bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
-            let pointCount = 0;
-
-            if (!geoData.features || geoData.features.length === 0) {
-                console.error("❌ GeoJSON 裡面沒有 features!");
-                return;
-            }
             
             geoData.features.forEach(feature => {
                 const geometry = feature.geometry;
-                if (!geometry) return;
-
                 const coords = geometry.type === 'MultiPolygon' 
                     ? geometry.coordinates.flat(1) 
                     : geometry.coordinates;
 
                 coords.forEach(ring => {
                     ring.forEach(([x, y]) => {
-                        pointCount++;
                         if (x < bounds.minX) bounds.minX = x;
                         if (x > bounds.maxX) bounds.maxX = x;
                         if (y < bounds.minY) bounds.minY = y;
@@ -158,49 +233,37 @@
                 });
             });
 
-            console.log(`📊 統計：共處理 ${pointCount} 個座標點`);
-            console.log("📐 計算出的邊界 (Bounds):", bounds);
-
-            if (bounds.minX === Infinity) {
-                console.error("❌ 無法計算邊界，請檢查 JSON 座標格式");
-                return;
-            }
-
-            // 設定 ViewBox
+            // 設定 SVG 視野
             const paddingX = (bounds.maxX - bounds.minX) * 0.05;
             const paddingY = (bounds.maxY - bounds.minY) * 0.05;
             const viewBox = `${bounds.minX - paddingX} ${bounds.minY - paddingY} ${(bounds.maxX - bounds.minX) + paddingX*2} ${(bounds.maxY - bounds.minY) + paddingY*2}`;
             
-            console.log("🖼️ SVG ViewBox 設定為:", viewBox);
-
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("viewBox", viewBox);
-            // 垂直翻轉修正
-            svg.style.transform = "scaleY(-1)"; 
+            svg.style.transform = "scaleY(-1)"; // 翻轉
             board.appendChild(svg);
 
-            // --- B. 繪製路徑 ---
-            let drawnCount = 0;
-            geoData.features.forEach((feature, idx) => {
+            geoData.features.forEach(feature => {
                 const pathData = generatePath(feature.geometry);
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", pathData);
                 path.setAttribute("class", "map-path");
                 svg.appendChild(path);
-                drawnCount++;
 
-                // --- C. 挖洞 ---
+                // --- 🌟 這裡使用翻譯功能 ---
                 const props = feature.properties;
-                const jsonCityName = props.COUNTYNAME || props.name || props.C_Name;
+                // 從 JSON 抓英文名 (name 或 COUNTYNAME)
+                const rawName = props.name || props.COUNTYNAME || props.Name; 
                 
-                // console.log(`Feature ${idx}: 名稱=${jsonCityName}`); // 太吵可以註解掉
+                // 查字典轉換成中文，如果查不到就用原本的
+                const chineseName = nameTranslation[rawName] || rawName;
 
-                if (jsonCityName) {
+                if (chineseName) {
                     const center = calculateCentroid(feature.geometry);
-                    createHoleAt(jsonCityName, center, bounds);
+                    // 傳入中文名字去建立洞口
+                    createHoleAt(chineseName, center, bounds);
                 }
             });
-            console.log(`✅ 已繪製 ${drawnCount} 個區塊`);
         }
 
         function generatePath(geometry) {
@@ -228,13 +291,13 @@
         }
 
         function createHoleAt(cityName, center, bounds) {
+            // 現在 cityName 已經是翻譯過的中文了 (例如 "臺北市")
             const weatherCity = citiesData.find(c => c.name === cityName);
             
             if (!weatherCity) {
-                console.warn(`⚠️ 找不到天氣資料匹配: 地圖名稱 [${cityName}]`);
+                // 如果還是找不到，console 偷偷告訴我是誰
+                console.log(`⚠️ 仍無法匹配: ${cityName}`);
                 return;
-            } else {
-                console.log(`🎯 匹配成功: [${cityName}] -> 產生洞口`);
             }
 
             const paddingX = (bounds.maxX - bounds.minX) * 0.05;
@@ -275,7 +338,6 @@
             board.appendChild(container);
         }
 
-        // 遊戲邏輯
         function whackMole(index) {
             clearTimeout(autoPlayTimeout);
             document.querySelectorAll('.hole-container').forEach(el => el.classList.remove('active'));
