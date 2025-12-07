@@ -29,7 +29,7 @@
             text-shadow: 2px 2px 0 #333;
             margin-top: 15px;
             margin-bottom: 5px;
-            z-index: 20; /* 提高層級，避免被地圖蓋住 */
+            z-index: 20;
             text-align: center;
             font-size: 1.8rem;
             font-weight: bold;
@@ -42,7 +42,7 @@
             font-weight: bold;
             font-size: 1.2rem;
             margin-bottom: 10px;
-            z-index: 20; /* 提高層級 */
+            z-index: 20;
             text-align: center;
             letter-spacing: 1px;
             position: relative;
@@ -51,16 +51,14 @@
         /* --- 地圖容器 --- */
         .map-container {
             position: relative;
-            /* 1. 地圖放大：寬度改為 900px (約原來的1.5倍) */
             width: 100%;
             max-width: 900px; 
-            height: 950px; /* 高度配合拉長 */
+            height: 950px; 
             
-            /* 3. 大幅縮短間距：用負 margin 往上拉 */
+            /* 調整：大幅左移 (-22%) 讓本島中心（尤其北部）對齊標題 */
+            transform: translateX(-22%);
+            
             margin: -100px auto 20px auto; 
-
-            /* 2. 地圖左移：用 transform 把整個容器往左平移，讓台灣本島視覺置中 */
-            transform: translateX(-8%);
         }
 
         /* --- SVG 地圖樣式 --- */
@@ -102,18 +100,18 @@
             box-shadow: 0 3px 5px rgba(0,0,0,0.5) inset; z-index: 1; 
         }
 
-        /* 5. 縣市名稱下移：從 top 改為 bottom */
+        /* 調整：標籤位置貼近洞口 */
         .city-label {
             position: absolute; 
-            top: auto;        /* 取消頂部定位 */
-            bottom: -20px;    /* 移到洞的下方 */
+            top: auto;        
+            bottom: -6px;     /* 往上調，原本是 -20px，現在幾乎貼著洞的邊緣 */
             width: 100px; 
             left: 50%;
             transform: translateX(-50%); 
             text-align: center; 
             color: #fff;
             font-weight: bold; 
-            font-size: 13px;  /* 稍微加大字體因為地圖變大了 */
+            font-size: 13px; 
             text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
             pointer-events: none; 
             z-index: 3;
@@ -150,7 +148,6 @@
         .hole-container.active .mole { transform: translateX(-50%) scale(1); opacity: 1; }
         .hole-container.active .mole-info { opacity: 1; transform: translateX(-50%) scale(1); }
 
-        /* 4. 修改 Loading 樣式：跟 Subtitle 一致 */
         #loading { 
             color: #fff;
             text-shadow: 2px 2px 0 #333;
@@ -165,7 +162,7 @@
         @media (max-width: 600px) {
             .hole-container { width: 30px; height: 30px; }
             .hole { height: 10px; bottom: 8px; }
-            .city-label { font-size: 10px; bottom: -15px; } /* 手機版也要調整 label 位置 */
+            .city-label { font-size: 10px; bottom: -8px; }
             .mole { width: 24px; height: 30px; bottom: 12px; }
             .mole::before { width: 8px; height: 6px; top: 12px; }
             .mole::after { width: 3px; height: 3px; top: 10px; left: 6px; box-shadow: 9px 0 0 #333; }
@@ -183,7 +180,6 @@
         </div>
 
     <script>
-        // ⚠️ 確認 Zeabur 後端網址
         const API_URL = 'https://hex-final.zeabur.app/api/weather'; 
         
         const board = document.getElementById('game-board');
@@ -193,7 +189,6 @@
         let geoData = null;
         let autoPlayTimeout = null;
 
-        // 🌟 關鍵翻譯字典：把 tw.json 的英文名對應到 CWA 的中文名
         const nameTranslation = {
             "Taipei City": "臺北市",
             "New Taipei City": "新北市",
@@ -243,7 +238,6 @@
         function drawMapSystem() {
             board.innerHTML = ''; 
 
-            // 計算邊界
             let bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
             
             geoData.features.forEach(feature => {
@@ -262,14 +256,19 @@
                 });
             });
 
-            // 設定 SVG 視野
             const paddingX = (bounds.maxX - bounds.minX) * 0.05;
             const paddingY = (bounds.maxY - bounds.minY) * 0.05;
             const viewBox = `${bounds.minX - paddingX} ${bounds.minY - paddingY} ${(bounds.maxX - bounds.minX) + paddingX*2} ${(bounds.maxY - bounds.minY) + paddingY*2}`;
             
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("viewBox", viewBox);
-            svg.style.transform = "scaleY(-1)"; // 翻轉
+            
+            // ⚠️ 關鍵修正：強制不保持比例，讓 SVG 填滿容器
+            // 這樣 SVG 內部的路徑縮放就會跟外層 div (洞) 的百分比定位完全一致
+            // 解決了地圖跟洞口位置對不上的問題
+            svg.setAttribute("preserveAspectRatio", "none");
+            
+            svg.style.transform = "scaleY(-1)"; 
             board.appendChild(svg);
 
             geoData.features.forEach(feature => {
@@ -279,17 +278,12 @@
                 path.setAttribute("class", "map-path");
                 svg.appendChild(path);
 
-                // --- 🌟 這裡使用翻譯功能 ---
                 const props = feature.properties;
-                // 從 JSON 抓英文名 (name 或 COUNTYNAME)
                 const rawName = props.name || props.COUNTYNAME || props.Name; 
-                
-                // 查字典轉換成中文，如果查不到就用原本的
                 const chineseName = nameTranslation[rawName] || rawName;
 
                 if (chineseName) {
                     const center = calculateCentroid(feature.geometry);
-                    // 傳入中文名字去建立洞口
                     createHoleAt(chineseName, center, bounds);
                 }
             });
@@ -320,11 +314,9 @@
         }
 
         function createHoleAt(cityName, center, bounds) {
-            // 現在 cityName 已經是翻譯過的中文了 (例如 "臺北市")
             const weatherCity = citiesData.find(c => c.name === cityName);
             
             if (!weatherCity) {
-                // 如果還是找不到，console 偷偷告訴我是誰
                 console.log(`⚠️ 仍無法匹配: ${cityName}`);
                 return;
             }
