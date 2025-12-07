@@ -53,11 +53,14 @@
             position: relative;
             width: 100%;
             max-width: 900px; 
-            height: 950px; 
             
-            /* 調整：大幅左移 (-22%) 讓本島中心（尤其北部）對齊標題 */
-            transform: translateX(-22%);
+            /* ⚠️ 修改 1: 移除固定高度，改為 auto，比例由 JS 控制 */
+            height: auto; 
             
+            /* 保持電腦版的左移設定 */
+            transform: translateX(-25%);
+            
+            /* 間距設定 */
             margin: -100px auto 20px auto; 
         }
 
@@ -100,11 +103,10 @@
             box-shadow: 0 3px 5px rgba(0,0,0,0.5) inset; z-index: 1; 
         }
 
-        /* 調整：標籤位置貼近洞口 */
         .city-label {
             position: absolute; 
             top: auto;        
-            bottom: -6px;     /* 往上調，原本是 -20px，現在幾乎貼著洞的邊緣 */
+            bottom: -6px;
             width: 100px; 
             left: 50%;
             transform: translateX(-50%); 
@@ -160,6 +162,13 @@
         }
 
         @media (max-width: 600px) {
+            /* ⚠️ 修改 2: 手機版調整 */
+            .map-container {
+                /* 手機上不要移那麼多，不然右邊會留白太多 */
+                transform: translateX(-10%); 
+                margin-top: -60px; /* 手機版間距微調 */
+            }
+
             .hole-container { width: 30px; height: 30px; }
             .hole { height: 10px; bottom: 8px; }
             .city-label { font-size: 10px; bottom: -8px; }
@@ -258,14 +267,20 @@
 
             const paddingX = (bounds.maxX - bounds.minX) * 0.05;
             const paddingY = (bounds.maxY - bounds.minY) * 0.05;
-            const viewBox = `${bounds.minX - paddingX} ${bounds.minY - paddingY} ${(bounds.maxX - bounds.minX) + paddingX*2} ${(bounds.maxY - bounds.minY) + paddingY*2}`;
+            
+            // 計算地圖的總寬高
+            const mapWidth = (bounds.maxX - bounds.minX) + paddingX * 2;
+            const mapHeight = (bounds.maxY - bounds.minY) + paddingY * 2;
+
+            // ⚠️ 修改 3: 強制設定容器的比例，這能確保手機版高度自動縮小，不會變形
+            board.style.aspectRatio = `${mapWidth} / ${mapHeight}`;
+
+            const viewBox = `${bounds.minX - paddingX} ${bounds.minY - paddingY} ${mapWidth} ${mapHeight}`;
             
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("viewBox", viewBox);
             
-            // ⚠️ 關鍵修正：強制不保持比例，讓 SVG 填滿容器
-            // 這樣 SVG 內部的路徑縮放就會跟外層 div (洞) 的百分比定位完全一致
-            // 解決了地圖跟洞口位置對不上的問題
+            // 保持不比例縮放，因為外層容器比例已經被我們用 JS 完美鎖定了
             svg.setAttribute("preserveAspectRatio", "none");
             
             svg.style.transform = "scaleY(-1)"; 
